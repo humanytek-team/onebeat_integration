@@ -1,6 +1,13 @@
 OneBeat integration
 ===================
 
+Setup
+-----
+
+Is needed to enable the `Storage Locations` and `Multi-Warehouses` in the `Inventory`/`Configuration`/`Settings`
+
+**Files**
+
 STOCKLOCATIONS
 --------------
 * Nombre del archivo: STOCKLOCATIONS_postfix.csv
@@ -99,6 +106,3 @@ for warehouse in stock.locations for product in product.product if product.sale_
     'Report Day': now.day,
 }
 ```
-
-
-Es necesaria configuración TODO
