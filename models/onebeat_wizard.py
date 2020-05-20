@@ -85,7 +85,10 @@ class OneBeatWizard(models.TransientModel):
         day = day[:2]
         self.mtsskus_file_fname = 'MTSSKUS_%s.csv' % now.replace('-', '').replace('T', '_').replace(':', '')[:-2]
 
-        Locations = self.env['stock.location'].search([('to_report', '=', True)])
+        Locations = self.env['stock.location'].search([
+            ('to_report', '=', True),
+            ('usage', 'in', ['internal']),
+        ])
         Products = self.env['product.product'].search([('sale_ok', '=', True)])
         data = [{
             'Stock Location Name': location_id.display_name,
@@ -165,7 +168,10 @@ class OneBeatWizard(models.TransientModel):
         now = fields.Datetime.now(self).isoformat()
         self.status_file_fname = 'STATUS_%s.csv' % now.replace('-', '').replace('T', '_').replace(':', '')[:-2]
 
-        Locations = self.env['stock.location'].search([('to_report', '=', True)])
+        Locations = self.env['stock.location'].search([
+            ('to_report', '=', True),
+            ('usage', 'in', ['internal']),
+        ])
         Products = self.env['product.product'].search([('sale_ok', '=', True)])
         data = [product_id.get_quantities(now, location_id) for location_id in Locations for product_id in Products]
 
