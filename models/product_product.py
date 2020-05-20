@@ -15,8 +15,8 @@ class ProductProduct(models.Model):
         return {
             'Stock Location Name': location_id.display_name,
             'SKU Name': self.default_code,
-            'Inventory At Hand': quantities['qty_available'],
-            'Inventory On The Way': quantities['outgoing_qty'],
+            'Inventory At Hand': max(quantities['qty_available'], 0),
+            'Inventory On The Way': max(quantities['outgoing_qty'], 0),
             'Reported Year': year,
             'Reported Month': month,
             'Reported Day': day,
