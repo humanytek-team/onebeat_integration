@@ -61,16 +61,18 @@ class OneBeatWizard(models.TransientModel):
         }
 
     def get_stocklocations_file(self):
-        today = fields.Date.context_today(self).isoformat()
-        self.stocklocations_file_fname = 'STOCKLOCATIONS_%s.csv' % today.replace('-', '')
+        now = fields.Datetime.now(self).isoformat()
+        year, month, day = now.split('-')
+        day = day[:2]
+        self.stocklocations_file_fname = 'STOCKLOCATIONS_%s.csv' % now.replace('-', '').replace('T', '_').replace(':', '')[:-2]
 
         Locations = self.env['stock.location'].search([('to_report', '=', True)])
         data = [{
             'Nombre Agencia': location_id.display_name,
             'Descripción': location_id.barcode,
-            'Año reporte': today.split('-')[0],
-            'Mes Reporte': today.split('-')[1],
-            'Dia Reporte': today.split('-')[2],
+            'Año reporte': year,
+            'Mes Reporte': month,
+            'Dia Reporte': day,
             'Ubicación': None,
         } for location_id in Locations]
 
@@ -78,8 +80,10 @@ class OneBeatWizard(models.TransientModel):
         self.stocklocations_file = base64.b64encode(data_to_bytes(fieldnames, data))
 
     def get_mtsskus_file(self):
-        today = fields.Date.context_today(self).isoformat()
-        self.mtsskus_file_fname = 'MTSSKUS_%s.csv' % today.replace('-', '')
+        now = fields.Datetime.now(self).isoformat()
+        year, month, day = now.split('-')
+        day = day[:2]
+        self.mtsskus_file_fname = 'MTSSKUS_%s.csv' % now.replace('-', '').replace('T', '_').replace(':', '')[:-2]
 
         Locations = self.env['stock.location'].search([('to_report', '=', True)])
         Products = self.env['product.product'].search([('sale_ok', '=', True)])
@@ -96,21 +100,41 @@ class OneBeatWizard(models.TransientModel):
             'Precio unitario': product_id.list_price,
             'TVC': product_id.standard_price,
             'Throughput': product_id.list_price - product_id.standard_price,
-            'Minimo Reabastecimiento': None,
+            # 'Minimo Reabastecimiento': None,
             'Unidad de Medida': product_id.uom_id.name,
-            'Reported Year': today.split('-')[0],
-            'Reported Month': today.split('-')[1],
-            'Reported Day': today.split('-')[2],
+            'Reported Year': year,
+            'Reported Month': month,
+            'Reported Day': day,
         } for location_id in Locations for product_id in Products]
 
-        fieldnames = ['Stock Location Name', 'Origin SL', 'SKU Name', 'SKU Description', 'Buffer Size', 'Replenishment Time', 'Inventory at Site', 'Inventory at Transit', 'Inventory at Production', 'Precio unitario', 'TVC', 'Throughput', 'Minimo Reabastecimiento', 'Unidad de Medida', 'Reported Year', 'Reported Month', 'Reported Day']
+        fieldnames = [
+            'Stock Location Name',
+            'Origin SL',
+            'SKU Name',
+            'SKU Description',
+            'Buffer Size',
+            'Replenishment Time',
+            'Inventory at Site',
+            'Inventory at Transit',
+            'Inventory at Production',
+            'Precio unitario',
+            'TVC',
+            'Throughput',
+            # 'Minimo Reabastecimiento',
+            'Unidad de Medida',
+            'Reported Year',
+            'Reported Month',
+            'Reported Day',
+        ]
         self.mtsskus_file = base64.b64encode(data_to_bytes(fieldnames, data))
 
     def get_transactions_file(self, start=None, stop=None, last_day=False):
         start = (last_day and fields.Date.today() - timedelta(days=1)) or start or self.start
         stop = (last_day and fields.Date.today()) or stop or self.stop
-        today = fields.Date.context_today(self).isoformat()
-        self.transactions_file_fname = 'TRANSACTIONS_%s.csv' % today.replace('-', '')
+        now = fields.Datetime.now(self).isoformat()
+        year, month, day = now.split('-')
+        day = day[:2]
+        self.transactions_file_fname = 'TRANSACTIONS_%s.csv' % now.replace('-', '').replace('T', '_').replace(':', '')[:-2]
 
         Moves = self.env['stock.move'].search([
             '|',
@@ -136,12 +160,12 @@ class OneBeatWizard(models.TransientModel):
     def get_status_file(self, start=None, stop=None, last_day=False):
         start = (last_day and fields.Date.today() - timedelta(days=1)) or start or self.start
         stop = (last_day and fields.Date.today()) or stop or self.stop
-        today = fields.Date.context_today(self).isoformat()
-        self.status_file_fname = 'STATUS_%s.csv' % today.replace('-', '')
+        now = fields.Datetime.now(self).isoformat()
+        self.status_file_fname = 'STATUS_%s.csv' % now.replace('-', '').replace('T', '_').replace(':', '')[:-2]
 
         Locations = self.env['stock.location'].search([('to_report', '=', True)])
         Products = self.env['product.product'].search([('sale_ok', '=', True)])
-        data = [product_id.get_quantities(today, location_id) for location_id in Locations for product_id in Products]
+        data = [product_id.get_quantities(now, location_id) for location_id in Locations for product_id in Products]
 
         fieldnames = ['Stock Location Name', 'SKU Name', 'Inventory At Hand', 'Inventory On The Way', 'Reported Year', 'Reported Month', 'Reported Day', ]
         self.status_file = base64.b64encode(data_to_bytes(fieldnames, data))

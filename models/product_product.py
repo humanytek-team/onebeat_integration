@@ -8,16 +8,18 @@ from odoo.tools.float_utils import float_round
 class ProductProduct(models.Model):
     _inherit = 'product.product'
 
-    def get_quantities(self, today, location_id):
+    def get_quantities(self, now, location_id):
+        year, month, day = now.split('-')
+        day = day[:2]
         quantities = self._compute_quantities_dict2([location_id.id])[self.id]
         return {
             'Stock Location Name': location_id.display_name,
             'SKU Name': self.default_code,
             'Inventory At Hand': quantities['qty_available'],
             'Inventory On The Way': quantities['outgoing_qty'],
-            'Reported Year': today.split('-')[0],
-            'Reported Month': today.split('-')[1],
-            'Reported Day': today.split('-')[2],
+            'Reported Year': year,
+            'Reported Month': month,
+            'Reported Day': day,
         }
 
     def _compute_quantities_dict2(self, location_ids):
