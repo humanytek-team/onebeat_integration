@@ -99,7 +99,7 @@ class OneBeatWizard(models.TransientModel):
             'Inventory at Production': 0,
             'Precio unitario': product_id.list_price,
             'TVC': product_id.standard_price,
-            'Throughput': product_id.list_price - product_id.standard_price,
+            'Throughput': max(product_id.list_price - product_id.standard_price, 0),
             # 'Minimo Reabastecimiento': None,
             'Unidad de Medida': product_id.uom_id.name,
             'Reported Year': year,
@@ -140,18 +140,20 @@ class OneBeatWizard(models.TransientModel):
             '|',
             ('location_id.to_report', '=', True),
             ('location_dest_id.to_report', '=', True),
+            ('location_id.usage', 'in', ['supplier', 'internal', 'customer']),
+            ('location_dest_id.usage', 'in', ['supplier', 'internal', 'customer']),
             ('date', '>=', start),
             ('date', '<', stop),
         ])
         data = [{
             'Origin': move_id.location_id.display_name,
             'SKU Name': move_id.product_id.default_code,
-            'Destination': move_id.location_dest_id.name,
+            'Destination': move_id.location_dest_id.display_name,
             'Transaction Type (in/out)': 'OUT' if move_id.location_id.usage == 'internal' else 'IN',
             'Quantity': move_id.quantity_done,
             'Shipping Year': move_id.date.isoformat().split('-')[0],
             'Shipping Month': move_id.date.isoformat().split('-')[1],
-            'Shipping Day': move_id.date.isoformat().split('-')[2],
+            'Shipping Day': move_id.date.isoformat().split('-')[2][:2],
         } for move_id in Moves]
 
         fieldnames = ['Origin', 'SKU Name', 'Destination', 'Transaction Type (in/out)', 'Quantity', 'Shipping Year', 'Shipping Month', 'Shipping Day', ]
