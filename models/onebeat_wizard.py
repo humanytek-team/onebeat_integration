@@ -93,7 +93,7 @@ class OneBeatWizard(models.TransientModel):
             'SKU Name': product_id.default_code,
             'SKU Description': product_id.name,
             'Buffer Size': product_id.buffer_size,
-            'Replenishment Time': product_id.seller_ids[0].delay if product_id.seller_ids else None,  # TODO base on mrp?
+            'Replenishment Time': product_id.seller_ids[0].delay if product_id.seller_ids else product_id.produce_delay,
             'Inventory at Site': 0,
             'Inventory at Transit': 0,
             'Inventory at Production': 0,
