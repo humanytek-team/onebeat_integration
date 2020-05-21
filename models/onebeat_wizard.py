@@ -92,7 +92,7 @@ class OneBeatWizard(models.TransientModel):
         Products = self.env['product.product'].search([('sale_ok', '=', True)])
         data = [{
             'Stock Location Name': location_id.display_name,
-            'Origin SL': 'Proveedor' if product_id.seller_ids else 'Producción',  # TODO
+            'Origin SL': product_id.seller_ids[0].name.property_stock_supplier.display_name if product_id.seller_ids else 'Planta de producción',
             'SKU Name': product_id.default_code,
             'SKU Description': product_id.name,
             'Buffer Size': product_id.buffer_size,
