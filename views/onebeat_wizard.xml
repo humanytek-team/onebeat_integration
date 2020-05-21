@@ -9,24 +9,32 @@
                     <field name="start"/>
                     <field name="stop"/>
                 </group>
-                <group>
-                    <field name="stocklocations_file_fname" invisible="1"/>
-                    <field name="stocklocations_file" filename="stocklocations_file_fname"/>
+                <group col="1">
+                    <group col="3">
+                        <field name="stocklocations_file_fname" invisible="1"/>
+                        <field name="stocklocations_file" filename="stocklocations_file_fname"/>
+                        <button name="get_stocklocations_file" type="object" string="Generate"/>
+                    </group>
 
-                    <field name="mtsskus_file_fname" invisible="1"/>
-                    <field name="mtsskus_file" filename="mtsskus_file_fname"/>
+                    <group col="3">
+                        <field name="mtsskus_file_fname" invisible="1"/>
+                        <field name="mtsskus_file" filename="mtsskus_file_fname"/>
+                        <button name="get_mtsskus_file" type="object" string="Generate"/>
+                    </group>
 
-                    <field name="transactions_file_fname" invisible="1"/>
-                    <field name="transactions_file" filename="transactions_file_fname"/>
+                    <group col="3">
+                        <field name="transactions_file_fname" invisible="1"/>
+                        <field name="transactions_file" filename="transactions_file_fname"/>
+                        <button name="get_transactions_file" type="object" string="Generate"/>
+                    </group>
 
-                    <field name="status_file_fname" invisible="1"/>
-                    <field name="status_file" filename="status_file_fname"/>
+                    <group col="3">
+                        <field name="status_file_fname" invisible="1"/>
+                        <field name="status_file" filename="status_file_fname"/>
+                        <button name="get_status_file" type="object" string="Generate"/>
+                    </group>
                 </group>
-                <footer>
-                    <button name="generate" type="object" string="Generate" class="oe_highlight"/>
-                    or
-                    <button special="cancel" string="Cancel"/>
-                </footer>
+                <footer/>
             </form>
         </field>
     </record>

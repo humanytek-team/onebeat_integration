@@ -19,28 +19,24 @@ class OneBeatWizard(models.TransientModel):
     _name = 'onebeat_wizard'
 
     stocklocations_file = fields.Binary(
-        compute='get_stocklocations_file',
+        readonly=True,
     )
     stocklocations_file_fname = fields.Char(
-        compute="get_stocklocations_file",
     )
     mtsskus_file = fields.Binary(
-        compute='get_mtsskus_file',
+        readonly=True,
     )
     mtsskus_file_fname = fields.Char(
-        compute="get_mtsskus_file",
     )
     transactions_file = fields.Binary(
-        compute='get_transactions_file',
+        readonly=True,
     )
     transactions_file_fname = fields.Char(
-        compute="get_transactions_file",
     )
     status_file = fields.Binary(
-        compute='get_status_file',
+        readonly=True,
     )
     status_file_fname = fields.Char(
-        compute="get_status_file",
     )
     start = fields.Date(
         default=fields.Date.from_string(fields.Date.today()) - timedelta(days=1),
@@ -50,15 +46,6 @@ class OneBeatWizard(models.TransientModel):
         default=fields.Date.context_today,
         required=True,
     )
-
-    def generate(self):
-        self.get_stocklocations_file()
-        self.get_mtsskus_file()
-        self.get_transactions_file()
-        self.get_status_file()
-        return {
-            "type": "ir.actions.do_nothing",
-        }
 
     def get_stocklocations_file(self):
         now = fields.Datetime.from_string(fields.Datetime.now(self)).isoformat()
@@ -78,6 +65,17 @@ class OneBeatWizard(models.TransientModel):
 
         fieldnames = ['Nombre Agencia', 'Descripción', 'Año reporte', 'Mes Reporte', 'Dia Reporte', 'Ubicación']
         self.stocklocations_file = base64.b64encode(data_to_bytes(fieldnames, data))
+
+        return {
+            'context': self.env.context,
+            'view_type': 'form',
+            'view_mode': 'form',
+            'res_model': self._name,
+            'res_id': self.id,
+            'view_id': False,
+            'type': 'ir.actions.act_window',
+            'target': 'new',
+        }
 
     def get_mtsskus_file(self):
         now = fields.Datetime.from_string(fields.Datetime.now(self)).isoformat()
@@ -131,12 +129,19 @@ class OneBeatWizard(models.TransientModel):
         ]
         self.mtsskus_file = base64.b64encode(data_to_bytes(fieldnames, data))
 
-    def get_transactions_file(self, start=None, stop=None, last_day=False):
-        start = (last_day and fields.Date.from_string(fields.Date.today()) - timedelta(days=1)) or start or self.start
-        stop = (last_day and fields.Date.from_string(fields.Date.today())) or stop or self.stop
+        return {
+            'context': self.env.context,
+            'view_type': 'form',
+            'view_mode': 'form',
+            'res_model': self._name,
+            'res_id': self.id,
+            'view_id': False,
+            'type': 'ir.actions.act_window',
+            'target': 'new',
+        }
+
+    def get_transactions_file(self):
         now = fields.Datetime.from_string(fields.Datetime.now(self)).isoformat()
-        year, month, day = now.split('-')
-        day = day[:2]
         self.transactions_file_fname = 'TRANSACTIONS_%s.csv' % now.replace('-', '').replace('T', '_').replace(':', '')[:-2]
 
         Moves = self.env['stock.move'].search([
@@ -145,8 +150,8 @@ class OneBeatWizard(models.TransientModel):
             ('location_dest_id.to_report', '=', True),
             ('location_id.usage', 'in', ['supplier', 'internal', 'customer']),
             ('location_dest_id.usage', 'in', ['supplier', 'internal', 'customer']),
-            ('date', '>=', start),
-            ('date', '<', stop),
+            ('date', '>=', self.start),
+            ('date', '<', self.stop),
         ])
         data = [{
             'Origin': move_id.location_id.display_name,
@@ -162,9 +167,18 @@ class OneBeatWizard(models.TransientModel):
         fieldnames = ['Origin', 'SKU Name', 'Destination', 'Transaction Type (in/out)', 'Quantity', 'Shipping Year', 'Shipping Month', 'Shipping Day', ]
         self.transactions_file = base64.b64encode(data_to_bytes(fieldnames, data))
 
-    def get_status_file(self, start=None, stop=None, last_day=False):
-        start = (last_day and fields.Date.from_string(fields.Date.today()) - timedelta(days=1)) or start or self.start
-        stop = (last_day and fields.Date.from_string(fields.Date.today())) or stop or self.stop
+        return {
+            'context': self.env.context,
+            'view_type': 'form',
+            'view_mode': 'form',
+            'res_model': self._name,
+            'res_id': self.id,
+            'view_id': False,
+            'type': 'ir.actions.act_window',
+            'target': 'new',
+        }
+
+    def get_status_file(self):
         now = fields.Datetime.from_string(fields.Datetime.now(self)).isoformat()
         self.status_file_fname = 'STATUS_%s.csv' % now.replace('-', '').replace('T', '_').replace(':', '')[:-2]
 
@@ -177,3 +191,14 @@ class OneBeatWizard(models.TransientModel):
 
         fieldnames = ['Stock Location Name', 'SKU Name', 'Inventory At Hand', 'Inventory On The Way', 'Reported Year', 'Reported Month', 'Reported Day', ]
         self.status_file = base64.b64encode(data_to_bytes(fieldnames, data))
+
+        return {
+            'context': self.env.context,
+            'view_type': 'form',
+            'view_mode': 'form',
+            'res_model': self._name,
+            'res_id': self.id,
+            'view_id': False,
+            'type': 'ir.actions.act_window',
+            'target': 'new',
+        }
