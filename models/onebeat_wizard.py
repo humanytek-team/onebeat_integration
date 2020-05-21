@@ -2,7 +2,7 @@
 import csv
 import base64
 from io import StringIO
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from odoo import _, api, fields, models
 
@@ -43,7 +43,7 @@ class OneBeatWizard(models.TransientModel):
         compute="get_status_file",
     )
     start = fields.Date(
-        default=fields.Date.today() - timedelta(days=1),
+        default=fields.Date.from_string(fields.Date.today()) - timedelta(days=1),
         required=True,
     )
     stop = fields.Date(
@@ -132,8 +132,8 @@ class OneBeatWizard(models.TransientModel):
         self.mtsskus_file = base64.b64encode(data_to_bytes(fieldnames, data))
 
     def get_transactions_file(self, start=None, stop=None, last_day=False):
-        start = (last_day and fields.Date.today() - timedelta(days=1)) or start or self.start
-        stop = (last_day and fields.Date.today()) or stop or self.stop
+        start = (last_day and fields.Date.from_string(fields.Date.today()) - timedelta(days=1)) or start or self.start
+        stop = (last_day and fields.Date.from_string(fields.Date.today())) or stop or self.stop
         now = fields.Datetime.now(self).isoformat()
         year, month, day = now.split('-')
         day = day[:2]
@@ -163,8 +163,8 @@ class OneBeatWizard(models.TransientModel):
         self.transactions_file = base64.b64encode(data_to_bytes(fieldnames, data))
 
     def get_status_file(self, start=None, stop=None, last_day=False):
-        start = (last_day and fields.Date.today() - timedelta(days=1)) or start or self.start
-        stop = (last_day and fields.Date.today()) or stop or self.stop
+        start = (last_day and fields.Date.from_string(fields.Date.today()) - timedelta(days=1)) or start or self.start
+        stop = (last_day and fields.Date.from_string(fields.Date.today())) or stop or self.stop
         now = fields.Datetime.now(self).isoformat()
         self.status_file_fname = 'STATUS_%s.csv' % now.replace('-', '').replace('T', '_').replace(':', '')[:-2]
 
