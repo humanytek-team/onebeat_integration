@@ -154,9 +154,9 @@ class OneBeatWizard(models.TransientModel):
             'Destination': move_id.location_dest_id.display_name,
             'Transaction Type (in/out)': 'OUT' if move_id.location_id.usage == 'internal' else 'IN',
             'Quantity': move_id.quantity_done,
-            'Shipping Year': move_id.date.isoformat().split('-')[0],
-            'Shipping Month': move_id.date.isoformat().split('-')[1],
-            'Shipping Day': move_id.date.isoformat().split('-')[2][:2],
+            'Shipping Year': fields.Datetime.from_string(move_id.date).isoformat().split('-')[0],
+            'Shipping Month': fields.Datetime.from_string(move_id.date).isoformat().split('-')[1],
+            'Shipping Day': fields.Datetime.from_string(move_id.date).isoformat().split('-')[2][:2],
         } for move_id in Moves]
 
         fieldnames = ['Origin', 'SKU Name', 'Destination', 'Transaction Type (in/out)', 'Quantity', 'Shipping Year', 'Shipping Month', 'Shipping Day', ]
