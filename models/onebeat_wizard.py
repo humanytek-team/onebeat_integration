@@ -173,7 +173,7 @@ class OneBeatWizard(models.TransientModel):
             ('usage', 'in', ['internal']),
         ])
         Products = self.env['product.product'].search([('sale_ok', '=', True)])
-        data = [product_id.get_quantities(now, location_id) for location_id in Locations for product_id in Products]
+        data = [product_id.get_quantities(now, location_id, self.stop) for location_id in Locations for product_id in Products]
 
         fieldnames = ['Stock Location Name', 'SKU Name', 'Inventory At Hand', 'Inventory On The Way', 'Reported Year', 'Reported Month', 'Reported Day', ]
         self.status_file = base64.b64encode(data_to_bytes(fieldnames, data))

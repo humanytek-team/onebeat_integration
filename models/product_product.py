@@ -8,10 +8,10 @@ from odoo.tools.float_utils import float_round
 class ProductProduct(models.Model):
     _inherit = 'product.product'
 
-    def get_quantities(self, now, location_id):
+    def get_quantities(self, now, location_id, stop):
         year, month, day = now.split('-')
         day = day[:2]
-        quantities = self._compute_quantities_dict2([location_id.id])[self.id]
+        quantities = self._compute_quantities_dict2([location_id.id], stop)[self.id]
         return {
             'Stock Location Name': location_id.display_name,
             'SKU Name': self.default_code,
@@ -22,12 +22,11 @@ class ProductProduct(models.Model):
             'Reported Day': day,
         }
 
-    def _compute_quantities_dict2(self, location_ids):
+    def _compute_quantities_dict2(self, location_ids, to_date):
         domain_quant_loc, domain_move_in_loc, domain_move_out_loc = self._get_domain_locations_new(location_ids)
         domain_quant = [('product_id', 'in', self.ids)] + domain_quant_loc
         dates_in_the_past = False
         # only to_date as to_date will correspond to qty_available
-        to_date = fields.Datetime.now() - timedelta(seconds=1)
         to_date = fields.Datetime.to_datetime(to_date)
         if to_date and to_date < fields.Datetime.now():
             dates_in_the_past = True
