@@ -61,7 +61,7 @@ class OneBeatWizard(models.TransientModel):
         }
 
     def get_stocklocations_file(self):
-        now = fields.Datetime.now(self).isoformat()
+        now = fields.Datetime.from_string(fields.Datetime.now(self)).isoformat()
         year, month, day = now.split('-')
         day = day[:2]
         self.stocklocations_file_fname = 'STOCKLOCATIONS_%s.csv' % now.replace('-', '').replace('T', '_').replace(':', '')[:-2]
@@ -80,7 +80,7 @@ class OneBeatWizard(models.TransientModel):
         self.stocklocations_file = base64.b64encode(data_to_bytes(fieldnames, data))
 
     def get_mtsskus_file(self):
-        now = fields.Datetime.now(self).isoformat()
+        now = fields.Datetime.from_string(fields.Datetime.now(self)).isoformat()
         year, month, day = now.split('-')
         day = day[:2]
         self.mtsskus_file_fname = 'MTSSKUS_%s.csv' % now.replace('-', '').replace('T', '_').replace(':', '')[:-2]
@@ -134,7 +134,7 @@ class OneBeatWizard(models.TransientModel):
     def get_transactions_file(self, start=None, stop=None, last_day=False):
         start = (last_day and fields.Date.from_string(fields.Date.today()) - timedelta(days=1)) or start or self.start
         stop = (last_day and fields.Date.from_string(fields.Date.today())) or stop or self.stop
-        now = fields.Datetime.now(self).isoformat()
+        now = fields.Datetime.from_string(fields.Datetime.now(self)).isoformat()
         year, month, day = now.split('-')
         day = day[:2]
         self.transactions_file_fname = 'TRANSACTIONS_%s.csv' % now.replace('-', '').replace('T', '_').replace(':', '')[:-2]
@@ -165,7 +165,7 @@ class OneBeatWizard(models.TransientModel):
     def get_status_file(self, start=None, stop=None, last_day=False):
         start = (last_day and fields.Date.from_string(fields.Date.today()) - timedelta(days=1)) or start or self.start
         stop = (last_day and fields.Date.from_string(fields.Date.today())) or stop or self.stop
-        now = fields.Datetime.now(self).isoformat()
+        now = fields.Datetime.from_string(fields.Datetime.now(self)).isoformat()
         self.status_file_fname = 'STATUS_%s.csv' % now.replace('-', '').replace('T', '_').replace(':', '')[:-2]
 
         Locations = self.env['stock.location'].search([
