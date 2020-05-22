@@ -178,6 +178,19 @@ class OneBeatWizard(models.TransientModel):
             'target': 'new',
         }
 
+    def get_at_hand(self, product_id, location_id):
+        return sum(quant_id.quantity for quant_id in self.env['stock.quant'].search([
+            ('product_id', '=', product_id.id),
+            ('location_id', '=', location_id.id),
+        ]))
+
+    def get_on_the_way(self, product_id, location_id):
+        return sum(line.product_uom_qty for line in self.env['stock.move.line'].search([
+            ('product_id', '=', product_id.id),
+            ('location_id', '=', location_id.id),
+            ('state', 'not in', ['done', 'draft', 'cancel']),
+        ]))
+
     def get_status_file(self):
         now = fields.Datetime.from_string(fields.Datetime.now(self)).isoformat()
         year, month, day = now.split('-')
@@ -189,27 +202,15 @@ class OneBeatWizard(models.TransientModel):
             ('usage', 'in', ['internal']),
         ])
         Products = self.env['product.product'].search([('sale_ok', '=', True)])
-        data = []
-        for location_id in Locations:
-            for product_id in Products:
-                at_hand = sum(quant_id.quantity for quant_id in self.env['stock.quant'].search([
-                    ('product_id', '=', product_id.id),
-                    ('location_id', '=', location_id.id),
-                ]))
-                on_the_way = sum(line.product_uom_qty for line in self.env['stock.move.line'].search([
-                    ('product_id', '=', product_id.id),
-                    ('location_id', '=', location_id.id),
-                    ('state', 'not in', ['done', 'draft', 'cancel']),
-                ]))
-                data.append({
-                    'Stock Location Name': location_id.display_name,
-                    'SKU Name': product_id.default_code,
-                    'Inventory At Hand': max(at_hand, 0),
-                    'Inventory On The Way': on_the_way,
-                    'Reported Year': year,
-                    'Reported Month': month,
-                    'Reported Day': day,
-                })
+        data = [{
+            'Stock Location Name': location_id.display_name,
+            'SKU Name': product_id.default_code,
+            'Inventory At Hand': max(self.get_at_hand(product_id, location_id), 0),
+            'Inventory On The Way': max(self.get_on_the_way(product_id, location_id), 0),
+            'Reported Year': year,
+            'Reported Month': month,
+            'Reported Day': day,
+        } for location_id in Locations for product_id in Products]
 
         fieldnames = ['Stock Location Name', 'SKU Name', 'Inventory At Hand', 'Inventory On The Way', 'Reported Year', 'Reported Month', 'Reported Day', ]
         self.status_file = base64.b64encode(data_to_bytes(fieldnames, data))

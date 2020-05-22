@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'OneBeat integration',
-    'version': '12.0.0.7.0',
+    'version': '12.0.0.8.0',
     'author': 'Humanytek',
     'depends': [
         'stock',
