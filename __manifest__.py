@@ -5,7 +5,6 @@
     'author': 'Humanytek',
     'depends': [
         'stock',
-        'mrp',
     ],
     'data': [
         # security

@@ -205,8 +205,8 @@ class OneBeatWizard(models.TransientModel):
         data = [{
             'Stock Location Name': location_id.display_name,
             'SKU Name': product_id.default_code,
-            'Inventory At Hand': max(self.get_at_hand(product_id, location_id), 0),
-            'Inventory On The Way': 158,
+            'Inventory At Hand': 158,
+            'Inventory On The Way': 159,
             'Reported Year': year,
             'Reported Month': month,
             'Reported Day': day,
