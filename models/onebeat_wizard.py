@@ -178,19 +178,6 @@ class OneBeatWizard(models.TransientModel):
             'target': 'new',
         }
 
-    def get_at_hand(self, product_id, location_id):
-        return sum(quant_id.quantity for quant_id in self.env['stock.quant'].search([
-            ('product_id', '=', product_id.id),
-            ('location_id', '=', location_id.id),
-        ]))
-
-    def get_on_the_way(self, product_id, location_id):
-        return sum(line.product_uom_qty for line in self.env['stock.move.line'].search([
-            ('product_id', '=', product_id.id),
-            ('location_id', '=', location_id.id),
-            ('state', 'not in', ['done', 'draft', 'cancel']),
-        ]))
-
     def get_status_file(self):
         now = fields.Datetime.from_string(fields.Datetime.now(self)).isoformat()
         year, month, day = now.split('-')
@@ -202,11 +189,31 @@ class OneBeatWizard(models.TransientModel):
             ('usage', 'in', ['internal']),
         ])
         Products = self.env['product.product'].search([('sale_ok', '=', True)])
+
+        Lines = self.env['stock.move.line'].read_group(
+            domain=[
+                ('state', 'not in', ['done', 'draft', 'cancel']),
+            ],
+            fields=['location_id', 'product_id', 'product_uom_qty'],
+            groupby=['location_id', 'product_id'],
+            lazy=False,
+        )
+        lines_dict = {(line['location_id'][0], line['product_id'][0], ): line['product_uom_qty'] for line in Lines}
+
+        Quants = self.env['stock.quant'].read_group(
+            domain=[
+            ],
+            fields=['location_id', 'product_id', 'quantity'],
+            groupby=['location_id', 'product_id'],
+            lazy=False,
+        )
+        quants_dict = {(quant['location_id'][0], quant['product_id'][0], ): quant['quantity'] for quant in Quants}
+
         data = [{
             'Stock Location Name': location_id.display_name,
             'SKU Name': product_id.default_code,
-            'Inventory At Hand': 158,
-            'Inventory On The Way': 159,
+            'Inventory At Hand': quants_dict.get((location_id.id, product_id.id), 0),
+            'Inventory On The Way': lines_dict.get((location_id.id, product_id.id), 0),
             'Reported Year': year,
             'Reported Month': month,
             'Reported Day': day,
