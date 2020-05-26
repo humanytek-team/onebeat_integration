@@ -15,6 +15,10 @@ def data_to_bytes(fieldnames, data):
     return writer_file.getvalue().encode('utf-8')
 
 
+def clean(val):
+    return val.replace('\n', '') if isinstance(val, str) else ''
+
+
 class OneBeatWizard(models.TransientModel):
     _name = 'onebeat_wizard'
 
@@ -55,8 +59,8 @@ class OneBeatWizard(models.TransientModel):
 
         Locations = self.env['stock.location'].search([('to_report', '=', True)])
         data = [{
-            'Nombre Agencia': location_id.display_name,
-            'Descripción': location_id.barcode,
+            'Nombre Agencia': clean(location_id.display_name),
+            'Descripción': clean(location_id.barcode),
             'Año reporte': year,
             'Mes Reporte': month,
             'Dia Reporte': day,
@@ -89,10 +93,10 @@ class OneBeatWizard(models.TransientModel):
         ])
         Products = self.env['product.product'].search([('sale_ok', '=', True)])
         data = [{
-            'Stock Location Name': location_id.display_name,
-            'Origin SL': product_id.seller_ids[0].name.property_stock_supplier.display_name if product_id.seller_ids else 'Planta de producción',
-            'SKU Name': product_id.default_code,
-            'SKU Description': product_id.name,
+            'Stock Location Name': clean(location_id.display_name),
+            'Origin SL': clean(product_id.seller_ids[0].name.property_stock_supplier.display_name) if product_id.seller_ids else 'Planta de producción',
+            'SKU Name': clean(product_id.default_code),
+            'SKU Description': clean(product_id.name),
             'Buffer Size': product_id.buffer_size,
             'Replenishment Time': product_id.seller_ids[0].delay if product_id.seller_ids else product_id.produce_delay,
             'Inventory at Site': 0,
@@ -102,7 +106,7 @@ class OneBeatWizard(models.TransientModel):
             'TVC': product_id.standard_price,
             'Throughput': max(product_id.list_price - product_id.standard_price, 0),
             # 'Minimo Reabastecimiento': None,
-            'Unidad de Medida': product_id.uom_id.name,
+            'Unidad de Medida': clean(product_id.uom_id.name),
             'Reported Year': year,
             'Reported Month': month,
             'Reported Day': day,
@@ -154,9 +158,9 @@ class OneBeatWizard(models.TransientModel):
             ('date', '<', self.stop),
         ])
         data = [{
-            'Origin': move_id.location_id.display_name,
-            'SKU Name': move_id.product_id.default_code,
-            'Destination': move_id.location_dest_id.display_name,
+            'Origin': clean(move_id.location_id.display_name),
+            'SKU Name': clean(move_id.product_id.default_code),
+            'Destination': clean(move_id.location_dest_id.display_name),
             'Transaction Type (in/out)': 'OUT' if move_id.location_id.usage == 'internal' else 'IN',
             'Quantity': move_id.quantity_done,
             'Shipping Year': fields.Datetime.from_string(move_id.date).isoformat().split('-')[0],
@@ -210,8 +214,8 @@ class OneBeatWizard(models.TransientModel):
         quants_dict = {(quant['location_id'][0], quant['product_id'][0], ): quant['quantity'] for quant in Quants}
 
         data = [{
-            'Stock Location Name': location_id.display_name,
-            'SKU Name': product_id.default_code,
+            'Stock Location Name': clean(location_id.display_name),
+            'SKU Name': clean(product_id.default_code),
             'Inventory At Hand': quants_dict.get((location_id.id, product_id.id), 0),
             'Inventory On The Way': lines_dict.get((location_id.id, product_id.id), 0),
             'Reported Year': year,
