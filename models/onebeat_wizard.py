@@ -55,7 +55,7 @@ class OneBeatWizard(models.TransientModel):
         now = fields.Datetime.from_string(fields.Datetime.now(self)).isoformat()
         year, month, day = now.split('-')
         day = day[:2]
-        self.stocklocations_file_fname = 'STOCKLOCATIONS_%s.csv' % now.replace('-', '').replace('T', '_').replace(':', '')[:-2]
+        self.stocklocations_file_fname = 'STOCKLOCATIONS_%s_%s.csv' % (self.env.user.company_id.vat[:3], now.replace('-', '').replace('T', '_').replace(':', '')[:-2])
 
         Locations = self.env['stock.location'].search([('to_report', '=', True)])
         data = [{
@@ -85,7 +85,7 @@ class OneBeatWizard(models.TransientModel):
         now = fields.Datetime.from_string(fields.Datetime.now(self)).isoformat()
         year, month, day = now.split('-')
         day = day[:2]
-        self.mtsskus_file_fname = 'MTSSKUS_%s.csv' % now.replace('-', '').replace('T', '_').replace(':', '')[:-2]
+        self.mtsskus_file_fname = 'MTSSKUS_%s_%s.csv' % (self.env.user.company_id.vat[:3], now.replace('-', '').replace('T', '_').replace(':', '')[:-2])
 
         Locations = self.env['stock.location'].search([
             ('to_report', '=', True),
@@ -146,7 +146,7 @@ class OneBeatWizard(models.TransientModel):
 
     def get_transactions_file(self):
         now = fields.Datetime.from_string(fields.Datetime.now(self)).isoformat()
-        self.transactions_file_fname = 'TRANSACTIONS_%s.csv' % now.replace('-', '').replace('T', '_').replace(':', '')[:-2]
+        self.transactions_file_fname = 'TRANSACTIONS_%s_%s.csv' % (self.env.user.company_id.vat[:3], now.replace('-', '').replace('T', '_').replace(':', '')[:-2])
 
         Moves = self.env['stock.move'].search([
             '|',
@@ -186,7 +186,7 @@ class OneBeatWizard(models.TransientModel):
         now = fields.Datetime.from_string(fields.Datetime.now(self)).isoformat()
         year, month, day = now.split('-')
         day = day[:2]
-        self.status_file_fname = 'STATUS_%s.csv' % now.replace('-', '').replace('T', '_').replace(':', '')[:-2]
+        self.status_file_fname = 'STATUS_%s_%s.csv' % (self.env.user.company_id.vat[:3], now.replace('-', '').replace('T', '_').replace(':', '')[:-2])
 
         Locations = self.env['stock.location'].search([
             ('to_report', '=', True),
