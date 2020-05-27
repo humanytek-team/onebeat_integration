@@ -7,6 +7,12 @@ from datetime import timedelta, datetime
 from odoo import _, api, fields, models
 
 
+# self.env.ref('stock.stock_location_stock')
+# self.env.ref('stock.stock_location_customers')
+# self.env.ref('stock.stock_location_suppliers')
+# self.env.ref('stock.location_production')
+
+
 def data_to_bytes(fieldnames, data):
     writer_file = StringIO()
     writer = csv.DictWriter(writer_file, fieldnames=fieldnames)
@@ -57,9 +63,14 @@ class OneBeatWizard(models.TransientModel):
         day = day[:2]
         self.stocklocations_file_fname = 'STOCKLOCATIONS_%s_%s.csv' % (self.env.user.company_id.vat[:3], now.replace('-', '').replace('T', '_').replace(':', '')[:-2])
 
-        Locations = self.env['stock.location'].search([('to_report', '=', True)])
+        Locations = self.env['stock.location'].browse([
+            self.env.ref('stock.stock_location_stock').id,
+            self.env.ref('stock.stock_location_customers').id,
+            self.env.ref('stock.stock_location_suppliers').id,
+            self.env.ref('stock.location_production').id,
+        ])
         data = [{
-            'Nombre Agencia': clean(location_id.display_name),
+            'Nombre Agencia': clean(location_id.name),
             'Descripción': clean(location_id.barcode),
             'Año reporte': year,
             'Mes Reporte': month,
@@ -87,14 +98,13 @@ class OneBeatWizard(models.TransientModel):
         day = day[:2]
         self.mtsskus_file_fname = 'MTSSKUS_%s_%s.csv' % (self.env.user.company_id.vat[:3], now.replace('-', '').replace('T', '_').replace(':', '')[:-2])
 
-        Locations = self.env['stock.location'].search([
-            ('to_report', '=', True),
-            ('usage', 'in', ['internal']),
+        Locations = self.env['stock.location'].browse([
+            self.env.ref('stock.stock_location_stock').id,
         ])
         Products = self.env['product.product'].search([('sale_ok', '=', True)])
         data = [{
-            'Stock Location Name': clean(location_id.display_name),
-            'Origin SL': clean(product_id.seller_ids[0].name.property_stock_supplier.display_name) if product_id.seller_ids else 'Planta de producción',
+            'Stock Location Name': clean(location_id.name),
+            'Origin SL': clean(product_id.seller_ids[0].name.property_stock_supplier.name) if product_id.seller_ids else 'Planta de producción',
             'SKU Name': clean(product_id.default_code),
             'SKU Description': clean(product_id.name),
             'Buffer Size': product_id.buffer_size,
@@ -149,18 +159,16 @@ class OneBeatWizard(models.TransientModel):
         self.transactions_file_fname = 'TRANSACTIONS_%s_%s.csv' % (self.env.user.company_id.vat[:3], now.replace('-', '').replace('T', '_').replace(':', '')[:-2])
 
         Moves = self.env['stock.move'].search([
-            '|',
-            ('location_id.to_report', '=', True),
-            ('location_dest_id.to_report', '=', True),
-            ('location_id.usage', 'in', ['supplier', 'internal', 'customer']),
-            ('location_dest_id.usage', 'in', ['supplier', 'internal', 'customer']),
+            ('state', 'in', ['done']),
+            ('location_id.usage', 'in', ['supplier', 'internal', 'customer', 'production']),
+            ('location_dest_id.usage', 'in', ['supplier', 'internal', 'customer', 'production']),
             ('date', '>=', self.start),
             ('date', '<', self.stop),
         ])
         data = [{
-            'Origin': clean(move_id.location_id.display_name),
+            'Origin': clean(move_id.location_id.name),
             'SKU Name': clean(move_id.product_id.default_code),
-            'Destination': clean(move_id.location_dest_id.display_name),
+            'Destination': clean(move_id.location_dest_id.name),
             'Transaction Type (in/out)': 'OUT' if move_id.location_id.usage == 'internal' else 'IN',
             'Quantity': move_id.quantity_done,
             'Shipping Year': fields.Datetime.from_string(move_id.date).isoformat().split('-')[0],
@@ -188,36 +196,35 @@ class OneBeatWizard(models.TransientModel):
         day = day[:2]
         self.status_file_fname = 'STATUS_%s_%s.csv' % (self.env.user.company_id.vat[:3], now.replace('-', '').replace('T', '_').replace(':', '')[:-2])
 
-        Locations = self.env['stock.location'].search([
-            ('to_report', '=', True),
-            ('usage', 'in', ['internal']),
+        Locations = self.env['stock.location'].browse([
+            self.env.ref('stock.stock_location_stock').id,
         ])
         Products = self.env['product.product'].search([('sale_ok', '=', True)])
+
+        Quants = self.env['stock.quant'].read_group(
+            domain=[
+                ('location_id.usage', '=', 'internal'),
+            ],
+            fields=['product_id', 'quantity'],
+            groupby=['product_id'],
+        )
+        print(Quants)
+        quants_dict = {quant['product_id'][0]: quant['quantity'] for quant in Quants}
 
         Lines = self.env['stock.move.line'].read_group(
             domain=[
                 ('state', 'not in', ['done', 'draft', 'cancel']),
             ],
-            fields=['location_id', 'product_id', 'product_uom_qty'],
-            groupby=['location_id', 'product_id'],
-            lazy=False,
+            fields=['product_id', 'product_uom_qty'],
+            groupby=['product_id'],
         )
-        lines_dict = {(line['location_id'][0], line['product_id'][0], ): line['product_uom_qty'] for line in Lines}
-
-        Quants = self.env['stock.quant'].read_group(
-            domain=[
-            ],
-            fields=['location_id', 'product_id', 'quantity'],
-            groupby=['location_id', 'product_id'],
-            lazy=False,
-        )
-        quants_dict = {(quant['location_id'][0], quant['product_id'][0], ): quant['quantity'] for quant in Quants}
+        lines_dict = {line['product_id'][0]: line['product_uom_qty'] for line in Lines}
 
         data = [{
-            'Stock Location Name': clean(location_id.display_name),
+            'Stock Location Name': clean(location_id.name),
             'SKU Name': clean(product_id.default_code),
-            'Inventory At Hand': quants_dict.get((location_id.id, product_id.id), 0),
-            'Inventory On The Way': lines_dict.get((location_id.id, product_id.id), 0),
+            'Inventory At Hand': quants_dict.get(product_id.id, 0),
+            'Inventory On The Way': lines_dict.get(product_id.id, 0),
             'Reported Year': year,
             'Reported Month': month,
             'Reported Day': day,
