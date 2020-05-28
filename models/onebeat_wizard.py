@@ -213,7 +213,10 @@ class OneBeatWizard(models.TransientModel):
         Locations = self.env['stock.location'].browse([
             self.env.ref('stock.stock_location_stock').id,
         ])
-        Products = self.env['product.product'].search([('sale_ok', '=', True)])
+        Products = self.env['product.product'].search([
+            ('sale_ok', '=', True),
+            ('type', '!=', 'service'),
+        ])
 
         Quants = self.env['stock.quant'].read_group(
             domain=[
