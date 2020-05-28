@@ -67,7 +67,7 @@ class OneBeatWizard(models.TransientModel):
             self.env.ref('stock.stock_location_stock').id,
             self.env.ref('stock.stock_location_customers').id,
             self.env.ref('stock.stock_location_suppliers').id,
-            self.env.ref('stock.location_production').id,
+            # self.env.ref('stock.location_production').id,
         ])
         data = [{
             'Nombre Agencia': clean(location_id.name),
@@ -101,10 +101,14 @@ class OneBeatWizard(models.TransientModel):
         Locations = self.env['stock.location'].browse([
             self.env.ref('stock.stock_location_stock').id,
         ])
-        Products = self.env['product.product'].search([('sale_ok', '=', True)])
+        Products = self.env['product.product'].search([
+            ('sale_ok', '=', True),
+            ('type', '!=', 'service'),
+            ('seller_ids', '!=', False),
+        ])
         data = [{
             'Stock Location Name': clean(location_id.name),
-            'Origin SL': clean(product_id.seller_ids[0].name.property_stock_supplier.name) if product_id.seller_ids else 'Planta de producción',
+            'Origin SL': clean(product_id.seller_ids[0].name.property_stock_supplier.name),
             'SKU Name': clean(product_id.default_code),
             'SKU Description': clean(product_id.name),
             'Buffer Size': product_id.buffer_size,
@@ -160,8 +164,18 @@ class OneBeatWizard(models.TransientModel):
 
         Moves = self.env['stock.move'].search([
             ('state', 'in', ['done']),
-            ('location_id.usage', 'in', ['supplier', 'internal', 'customer', 'production']),
-            ('location_dest_id.usage', 'in', ['supplier', 'internal', 'customer', 'production']),
+            ('location_id.usage', 'in', [
+                'supplier',
+                'internal',
+                'customer',
+                # 'production',
+            ]),
+            ('location_dest_id.usage', 'in', [
+                # 'supplier',
+                'internal',
+                'customer',
+                # 'production',
+            ]),
             ('date', '>=', self.start),
             ('date', '<', self.stop),
         ])
