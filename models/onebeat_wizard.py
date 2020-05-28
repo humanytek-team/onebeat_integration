@@ -67,7 +67,7 @@ class OneBeatWizard(models.TransientModel):
             self.env.ref('stock.stock_location_stock').id,
             self.env.ref('stock.stock_location_customers').id,
             self.env.ref('stock.stock_location_suppliers').id,
-            # self.env.ref('stock.location_production').id,
+            self.env.ref('stock.location_production').id,
         ])
         data = [{
             'Nombre Agencia': clean(location_id.name),
@@ -164,6 +164,13 @@ class OneBeatWizard(models.TransientModel):
 
         Moves = self.env['stock.move'].search([
             ('state', 'in', ['done']),
+            ('date', '>=', self.start),
+            ('date', '<', self.stop),
+            '|',
+            '&',
+            ('location_id.usage', '=', 'production'),
+            ('location_dest_id.usage', '=', 'internal'),
+            '&',
             ('location_id.usage', 'in', [
                 'supplier',
                 'internal',
@@ -176,8 +183,6 @@ class OneBeatWizard(models.TransientModel):
                 'customer',
                 # 'production',
             ]),
-            ('date', '>=', self.start),
-            ('date', '<', self.stop),
         ])
         data = [{
             'Origin': clean(move_id.location_id.name),
