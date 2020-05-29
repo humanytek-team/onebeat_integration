@@ -165,6 +165,7 @@ class OneBeatWizard(models.TransientModel):
             ('state', 'in', ['done']),
             ('date', '>=', self.start),
             ('date', '<', self.stop),
+            ('same_usage', '=', False),
             '|',
             '&',
             ('location_id.usage', '=', 'production'),
