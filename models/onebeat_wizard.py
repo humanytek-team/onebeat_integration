@@ -15,7 +15,7 @@ from odoo import _, api, fields, models
 
 def data_to_bytes(fieldnames, data):
     writer_file = StringIO()
-    writer = csv.DictWriter(writer_file, fieldnames=fieldnames)
+    writer = csv.DictWriter(writer_file, fieldnames=fieldnames, delimiter=';')
     writer.writeheader()
     writer.writerows(data)
     return writer_file.getvalue().encode('utf-8')
