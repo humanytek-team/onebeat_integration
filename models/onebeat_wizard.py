@@ -163,6 +163,7 @@ class OneBeatWizard(models.TransientModel):
 
         Moves = self.env['stock.move'].search([
             ('state', 'in', ['done']),
+            ('product_id.sale_ok', '=', True),
             ('date', '>=', self.start),
             ('date', '<', self.stop),
             '|',
