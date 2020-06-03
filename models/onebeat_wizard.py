@@ -181,7 +181,7 @@ class OneBeatWizard(models.TransientModel):
                 # 'supplier',
                 'internal',
                 'customer',
-                # 'production',
+                'production',
             ]),
         ]).filtered(lambda move: move.location_id.usage != move.location_dest_id.usage)
         data = [{
