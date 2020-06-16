@@ -183,7 +183,8 @@ class OneBeatWizard(models.TransientModel):
                 'customer',
                 'production',
             ]),
-        ]).filtered(lambda move: move.location_id.usage != move.location_dest_id.usage)
+            ('location_id.usage', '!=', 'location_dest_id.usage'),
+        ])
         data = [{
             'Origin': clean(move_id.location_id.name),
             'SKU Name': clean(move_id.product_id.default_code),
