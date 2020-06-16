@@ -157,6 +157,20 @@ class OneBeatWizard(models.TransientModel):
             'target': 'new',
         }
 
+    def group_moves(self, Moves):
+        grouped = {}
+        for move_id in Moves:
+            date = move_id.date.split(' ')[0]
+            key = (
+                move_id.product_id.default_code,
+                move_id.location_id.name,
+                move_id.location_dest_id.name,
+                'OUT' if move_id.location_id.usage == 'internal' else 'IN',
+                date
+            )
+            grouped[key] = grouped.get(key, 0) + move_id.quantity_done
+        return grouped
+
     def get_transactions_file(self):
         now = fields.Datetime.from_string(fields.Datetime.now(self)).isoformat()
         self.transactions_file_fname = 'TRANSACTIONS_%s_%s.csv' % (self.env.user.company_id.vat[:3], now.replace('-', '').replace('T', '_').replace(':', '')[:-2])
@@ -185,16 +199,17 @@ class OneBeatWizard(models.TransientModel):
             ]),
             ('location_id.usage', '!=', 'location_dest_id.usage'),
         ])
+        grouped = self.group_moves(Moves)
         data = [{
-            'Origin': clean(move_id.location_id.name),
-            'SKU Name': clean(move_id.product_id.default_code),
-            'Destination': clean(move_id.location_dest_id.name),
-            'Transaction Type (in/out)': 'OUT' if move_id.location_id.usage == 'internal' else 'IN',
-            'Quantity': move_id.quantity_done,
-            'Shipping Year': fields.Datetime.from_string(move_id.date).isoformat().split('-')[0],
-            'Shipping Month': fields.Datetime.from_string(move_id.date).isoformat().split('-')[1],
-            'Shipping Day': fields.Datetime.from_string(move_id.date).isoformat().split('-')[2][:2],
-        } for move_id in Moves]
+            'Origin': group[1],
+            'SKU Name':group[0],
+            'Destination':group[2],
+            'Transaction Type (in/out)':group[3],
+            'Quantity': grouped[group],
+            'Shipping Year':group[4].split('-')[0],
+            'Shipping Month':group[4].split('-')[1],
+            'Shipping Day':group[4].split('-')[2],
+        } for group in grouped]
 
         fieldnames = ['Origin', 'SKU Name', 'Destination', 'Transaction Type (in/out)', 'Quantity', 'Shipping Year', 'Shipping Month', 'Shipping Day', ]
         self.transactions_file = base64.b64encode(data_to_bytes(fieldnames, data))
@@ -231,7 +246,6 @@ class OneBeatWizard(models.TransientModel):
             fields=['product_id', 'quantity'],
             groupby=['product_id'],
         )
-        print(Quants)
         quants_dict = {quant['product_id'][0]: quant['quantity'] for quant in Quants}
 
         Lines = self.env['stock.move.line'].read_group(
