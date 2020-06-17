@@ -251,6 +251,12 @@ class OneBeatWizard(models.TransientModel):
         Lines = self.env['stock.move.line'].read_group(
             domain=[
                 ('state', 'not in', ['done', 'draft', 'cancel']),
+                ('location_id.usage', 'in', [
+                    'supplier',
+                ]),
+                ('location_dest_id.usage', 'in', [
+                    'internal',
+                ]),
             ],
             fields=['product_id', 'product_uom_qty'],
             groupby=['product_id'],
