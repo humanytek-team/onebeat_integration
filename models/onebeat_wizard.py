@@ -109,7 +109,6 @@ class OneBeatWizard(models.TransientModel):
             self.env.ref('stock.stock_location_stock').id,
         ])
         Products = self.env['product.product'].search([
-            ('sale_ok', '=', True),
             ('type', '!=', 'service'),
         ])
         data = [{
@@ -184,7 +183,6 @@ class OneBeatWizard(models.TransientModel):
         print(self.start)
         Moves = self.env['stock.move'].search([
             ('state', 'in', ['done']),
-            ('product_id.sale_ok', '=', True),
             ('date', '>=', self.start),
             ('date', '<', self.stop),
             '|',
@@ -241,7 +239,6 @@ class OneBeatWizard(models.TransientModel):
             self.env.ref('stock.stock_location_stock').id,
         ])
         Products = self.env['product.product'].search([
-            ('sale_ok', '=', True),
             ('type', '!=', 'service'),
         ])
 
