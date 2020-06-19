@@ -49,17 +49,17 @@ class OneBeatWizard(models.TransientModel):
     )
     status_file_fname = fields.Char(
     )
-    start = fields.Date(
-        default=fields.Date.from_string(fields.Date.today()) - timedelta(days=1),
+    start = fields.Datetime(
+        default=fields.Datetime.from_string(fields.Datetime.now()) - timedelta(days=1),
         required=True,
     )
-    stop = fields.Date(
-        default=fields.Date.context_today,
+    stop = fields.Datetime(
+        default=fields.Datetime.now,
         required=True,
     )
 
-    def get_now_localized(self):
-        now_utc = fields.Datetime.from_string(fields.Datetime.now(self))
+    def datetime_localized(self, date_time):
+        now_utc = fields.Datetime.from_string(date_time)
         tz = pytz.timezone(self.env.user.tz or pytz.utc)
         return pytz.utc.localize(now_utc).astimezone(tz)
 
@@ -67,7 +67,7 @@ class OneBeatWizard(models.TransientModel):
         return self.env.user.company_id.vat[:3]
 
     def get_stocklocations_file(self):
-        now = self.get_now_localized()
+        now = self.datetime_localized(fields.Datetime.now(self))
         year, month, day = now.strftime('%Y-%m-%d').split('-')
         self.stocklocations_file_fname = 'STOCKLOCATIONS_%s_%s.csv' % (self.get_company_id(), now.strftime('%Y%m%d'))
 
@@ -101,7 +101,7 @@ class OneBeatWizard(models.TransientModel):
         }
 
     def get_mtsskus_file(self):
-        now = self.get_now_localized()
+        now = self.datetime_localized(fields.Datetime.now(self))
         year, month, day = now.strftime('%Y-%m-%d').split('-')
         self.mtsskus_file_fname = 'MTSSKUS_%s_%s.csv' % (self.get_company_id(), now.strftime('%Y%m%d'))
 
@@ -167,7 +167,7 @@ class OneBeatWizard(models.TransientModel):
     def group_moves(self, Moves):
         grouped = {}
         for move_id in Moves:
-            date = move_id.date.split(' ')[0]
+            date = self.datetime_localized(move_id.date).strftime('%Y-%m-%d')
             key = (
                 move_id.product_id.default_code,
                 move_id.location_id.name,
@@ -179,7 +179,7 @@ class OneBeatWizard(models.TransientModel):
         return grouped
 
     def get_transactions_file(self):
-        now = self.get_now_localized()
+        now = self.datetime_localized(fields.Datetime.now(self))
         self.transactions_file_fname = 'TRANSACTIONS_%s_%s.csv' % (self.get_company_id(), now.strftime('%Y%m%d'))
         print(self.start)
         Moves = self.env['stock.move'].search([
@@ -233,7 +233,7 @@ class OneBeatWizard(models.TransientModel):
         }
 
     def get_status_file(self):
-        now = self.get_now_localized()
+        now = self.datetime_localized(fields.Datetime.now(self))
         year, month, day = now.strftime('%Y-%m-%d').split('-')
         self.status_file_fname = 'STATUS_%s_%s.csv' % (self.get_company_id(), now.strftime('%Y%m%d'))
 
