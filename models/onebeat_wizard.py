@@ -202,7 +202,7 @@ class OneBeatWizard(models.TransientModel):
                 'customer',
                 'production',
             ]),
-            ('location_id.usage', '!=', 'location_dest_id.usage'),
+            ('same_usage', '=', False),
         ])
         grouped = self.group_moves(Moves)
         data = [{
