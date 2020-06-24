@@ -182,7 +182,6 @@ class OneBeatWizard(models.TransientModel):
     def get_transactions_file(self):
         now = self.datetime_localized(fields.Datetime.now(self))
         self.transactions_file_fname = 'TRANSACTIONS_%s_%s.csv' % (self.get_company_id(), now.strftime('%Y%m%d'))
-        print(self.start)
         Moves = self.env['stock.move'].search([
             ('state', 'in', ['done']),
             ('date', '>=', self.start),
