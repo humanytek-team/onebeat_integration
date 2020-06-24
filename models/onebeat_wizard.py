@@ -166,6 +166,8 @@ class OneBeatWizard(models.TransientModel):
     def group_moves(self, Moves):
         grouped = {}
         for move_id in Moves:
+            if move_id.location_id.usage == move_id.location_dest_id.usage:
+                continue
             date = self.datetime_localized(move_id.date).strftime('%Y-%m-%d')
             key = (
                 move_id.product_id.default_code,
