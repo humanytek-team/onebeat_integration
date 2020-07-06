@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 from datetime import timedelta, datetime
-from io import StringIO
+from ftplib import FTP, FTP_TLS
+from io import StringIO, BytesIO
 import base64
 import csv
 import pytz
+import logging
 
 from odoo import _, api, fields, models
 
+_logger = logging.getLogger(__name__)
 
 # self.env.ref('stock.stock_location_stock')
 # self.env.ref('stock.stock_location_customers')
@@ -86,7 +89,6 @@ class OneBeatWizard(models.TransientModel):
     def get_stocklocations_file(self):
         now = self.datetime_localized(fields.Datetime.now(self))
         year, month, day = now.strftime('%Y-%m-%d').split('-')
-        self.stocklocations_file_fname = 'STOCKLOCATIONS_%s_%s.csv' % (self.get_company_id(), now.strftime('%Y%m%d'))
 
         Locations = self.env['stock.location'].browse([
             self.env.ref('stock.stock_location_stock').id,
@@ -104,16 +106,20 @@ class OneBeatWizard(models.TransientModel):
         } for location_id in Locations]
 
         fieldnames = ['Nombre Agencia', 'Descripción', 'Año reporte', 'Mes Reporte', 'Dia Reporte', 'Ubicación']
-        return base64.b64encode(data_to_bytes(fieldnames, data))
+        return (
+            'STOCKLOCATIONS_%s_%s.csv' % (self.get_company_id(), now.strftime('%Y%m%d')),
+            data_to_bytes(fieldnames, data)
+        )
 
     @keep_wizard_open
     def set_stocklocations_file(self):
-        self.stocklocations_file = self.get_stocklocations_file()
+        fname, data = self.get_stocklocations_file()
+        self.stocklocations_file_fname = fname
+        self.stocklocations_file = base64.b64encode(data)
 
     def get_mtsskus_file(self):
         now = self.datetime_localized(fields.Datetime.now(self))
         year, month, day = now.strftime('%Y-%m-%d').split('-')
-        self.mtsskus_file_fname = 'MTSSKUS_%s_%s.csv' % (self.get_company_id(), now.strftime('%Y%m%d'))
 
         Locations = self.env['stock.location'].browse([
             self.env.ref('stock.stock_location_stock').id,
@@ -160,11 +166,16 @@ class OneBeatWizard(models.TransientModel):
             'Reported Month',
             'Reported Day',
         ]
-        return base64.b64encode(data_to_bytes(fieldnames, data))
+        return (
+            'MTSSKUS_%s_%s.csv' % (self.get_company_id(), now.strftime('%Y%m%d')),
+            data_to_bytes(fieldnames, data)
+        )
 
     @keep_wizard_open
     def set_mtsskus_file(self):
-        self.mtsskus_file = self.get_mtsskus_file()
+        fname, data = self.get_mtsskus_file()
+        self.mtsskus_file_fname = fname
+        self.mtsskus_file = base64.b64encode(data)
 
     def group_moves(self, Moves):
         grouped = {}
@@ -184,7 +195,6 @@ class OneBeatWizard(models.TransientModel):
 
     def get_transactions_file(self, start=None, stop=None):
         now = self.datetime_localized(fields.Datetime.now(self))
-        self.transactions_file_fname = 'TRANSACTIONS_%s_%s.csv' % (self.get_company_id(), now.strftime('%Y%m%d'))
         Moves = self.env['stock.move'].search([
             ('state', 'in', ['done']),
             ('date', '>=', (start or self.start)),
@@ -221,16 +231,20 @@ class OneBeatWizard(models.TransientModel):
         } for group in grouped]
 
         fieldnames = ['Origin', 'SKU Name', 'Destination', 'Transaction Type (in/out)', 'Quantity', 'Shipping Year', 'Shipping Month', 'Shipping Day', ]
-        return base64.b64encode(data_to_bytes(fieldnames, data))
+        return (
+            'TRANSACTIONS_%s_%s.csv' % (self.get_company_id(), now.strftime('%Y%m%d')),
+            data_to_bytes(fieldnames, data)
+        )
 
     @keep_wizard_open
     def set_transactions_file(self):
-        self.transactions_file = self.get_transactions_file()
+        fname, data = self.get_transactions_file()
+        self.transactions_file_fname = fname
+        self.transactions_file = base64.b64encode(data)
 
     def get_status_file(self):
         now = self.datetime_localized(fields.Datetime.now(self))
         year, month, day = now.strftime('%Y-%m-%d').split('-')
-        self.status_file_fname = 'STATUS_%s_%s.csv' % (self.get_company_id(), now.strftime('%Y%m%d'))
 
         Locations = self.env['stock.location'].browse([
             self.env.ref('stock.stock_location_stock').id,
@@ -274,19 +288,37 @@ class OneBeatWizard(models.TransientModel):
         } for location_id in Locations for product_id in Products]
 
         fieldnames = ['Stock Location Name', 'SKU Name', 'Inventory At Hand', 'Inventory On The Way', 'Reported Year', 'Reported Month', 'Reported Day', ]
-        return base64.b64encode(data_to_bytes(fieldnames, data))
+        return (
+            'STATUS_%s_%s.csv' % (self.get_company_id(), now.strftime('%Y%m%d')),
+            data_to_bytes(fieldnames, data)
+        )
 
     @keep_wizard_open
     def set_status_file(self):
-        self.status_file = self.get_status_file()
+        fname, data = self.get_status_file()
+        self.status_file_fname = fname
+        self.status_file = base64.b64encode(data)
 
-        return {
-            'context': self.env.context,
-            'view_type': 'form',
-            'view_mode': 'form',
-            'res_model': self._name,
-            'res_id': self.id,
-            'view_id': False,
-            'type': 'ir.actions.act_window',
-            'target': 'new',
-        }
+    def send_to_ftp(self, start=None, stop=None):
+        host = ''  # TODO
+        port = 21  # TODO
+        user = ''  # TODO
+        passwd = ''  # TODO
+        ftp_tls = False
+        ftp = FTP_TLS() if ftp_tls else FTP()
+        try:
+            ftp.connect(host, port)
+            ftp.login(user, passwd)
+        except:
+            _logger.error('Unable to reach FTP server')
+        else:
+            stocklocations = self.get_stocklocations_file()
+            mtsskus = self.get_mtsskus_file()
+            transactions = self.get_transactions_file(start, stop)
+            status = self.get_status_file()
+            ftp.storbinary('STOR ' + stocklocations[0], BytesIO(stocklocations[1]))
+            ftp.storbinary('STOR ' + mtsskus[0], BytesIO(mtsskus[1]))
+            ftp.storbinary('STOR ' + transactions[0], BytesIO(transactions[1]))
+            ftp.storbinary('STOR ' + status[0], BytesIO(status[1]))
+        finally:
+            ftp.close()

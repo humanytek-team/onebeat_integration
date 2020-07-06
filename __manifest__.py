@@ -9,6 +9,7 @@
     'data': [
         # security
         # data
+        'data/ir_cron.xml',
         # reports
         # views
         'views/onebeat_wizard.xml',

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <odoo>
     <record id="onebeat_wizard_view_form" model="ir.ui.view">
         <field name="name">onebeat_wizard.view.form</field>
@@ -13,25 +13,25 @@
                     <group col="3">
                         <field name="stocklocations_file_fname" invisible="1"/>
                         <field name="stocklocations_file" filename="stocklocations_file_fname"/>
-                        <button name="get_stocklocations_file" type="object" string="Generate"/>
+                        <button name="set_stocklocations_file" type="object" string="Generate"/>
                     </group>
 
                     <group col="3">
                         <field name="mtsskus_file_fname" invisible="1"/>
                         <field name="mtsskus_file" filename="mtsskus_file_fname"/>
-                        <button name="get_mtsskus_file" type="object" string="Generate"/>
+                        <button name="set_mtsskus_file" type="object" string="Generate"/>
                     </group>
 
                     <group col="3">
                         <field name="transactions_file_fname" invisible="1"/>
                         <field name="transactions_file" filename="transactions_file_fname"/>
-                        <button name="get_transactions_file" type="object" string="Generate"/>
+                        <button name="set_transactions_file" type="object" string="Generate"/>
                     </group>
 
                     <group col="3">
                         <field name="status_file_fname" invisible="1"/>
                         <field name="status_file" filename="status_file_fname"/>
-                        <button name="get_status_file" type="object" string="Generate"/>
+                        <button name="set_status_file" type="object" string="Generate"/>
                     </group>
                 </group>
                 <footer/>
