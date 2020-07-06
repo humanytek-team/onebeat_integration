@@ -182,13 +182,13 @@ class OneBeatWizard(models.TransientModel):
             grouped[key] = grouped.get(key, 0) + move_id.quantity_done
         return grouped
 
-    def get_transactions_file(self):
+    def get_transactions_file(self, start=None, stop=None):
         now = self.datetime_localized(fields.Datetime.now(self))
         self.transactions_file_fname = 'TRANSACTIONS_%s_%s.csv' % (self.get_company_id(), now.strftime('%Y%m%d'))
         Moves = self.env['stock.move'].search([
             ('state', 'in', ['done']),
-            ('date', '>=', self.start),
-            ('date', '<', self.stop),
+            ('date', '>=', (start or self.start)),
+            ('date', '<', (stop or self.stop)),
             '|',
             '&',
             ('location_id.usage', '=', 'production'),
