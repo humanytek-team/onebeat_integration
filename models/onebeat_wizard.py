@@ -300,10 +300,10 @@ class OneBeatWizard(models.TransientModel):
         self.status_file = base64.b64encode(data)
 
     def send_to_ftp(self, start=None, stop=None):
-        host = ''  # TODO
-        port = 21  # TODO
-        user = ''  # TODO
-        passwd = ''  # TODO
+        host = self.env.user.company_id.ftp_host
+        port = self.env.user.company_id.ftp_port
+        user = self.env.user.company_id.ftp_user
+        passwd = self.env.user.company_id.ftp_passwd
         ftp_tls = False
         ftp = FTP_TLS() if ftp_tls else FTP()
         try:
