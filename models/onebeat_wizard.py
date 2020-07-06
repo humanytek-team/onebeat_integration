@@ -26,6 +26,23 @@ def clean(val):
     return val.replace('\n', '') if isinstance(val, str) else ''
 
 
+def keep_wizard_open(f):
+    def wrapper(*args, **kwargs):
+        f(*args, *kwargs)
+        self = args[0]
+        return {
+            'context': self.env.context,
+            'view_type': 'form',
+            'view_mode': 'form',
+            'res_model': self._name,
+            'res_id': self.id,
+            'view_id': False,
+            'type': 'ir.actions.act_window',
+            'target': 'new',
+        }
+    return wrapper
+
+
 class OneBeatWizard(models.TransientModel):
     _name = 'onebeat_wizard'
 
@@ -87,18 +104,11 @@ class OneBeatWizard(models.TransientModel):
         } for location_id in Locations]
 
         fieldnames = ['Nombre Agencia', 'Descripción', 'Año reporte', 'Mes Reporte', 'Dia Reporte', 'Ubicación']
-        self.stocklocations_file = base64.b64encode(data_to_bytes(fieldnames, data))
+        return base64.b64encode(data_to_bytes(fieldnames, data))
 
-        return {
-            'context': self.env.context,
-            'view_type': 'form',
-            'view_mode': 'form',
-            'res_model': self._name,
-            'res_id': self.id,
-            'view_id': False,
-            'type': 'ir.actions.act_window',
-            'target': 'new',
-        }
+    @keep_wizard_open
+    def set_stocklocations_file(self):
+        self.stocklocations_file = self.get_stocklocations_file()
 
     def get_mtsskus_file(self):
         now = self.datetime_localized(fields.Datetime.now(self))
@@ -150,18 +160,11 @@ class OneBeatWizard(models.TransientModel):
             'Reported Month',
             'Reported Day',
         ]
-        self.mtsskus_file = base64.b64encode(data_to_bytes(fieldnames, data))
+        return base64.b64encode(data_to_bytes(fieldnames, data))
 
-        return {
-            'context': self.env.context,
-            'view_type': 'form',
-            'view_mode': 'form',
-            'res_model': self._name,
-            'res_id': self.id,
-            'view_id': False,
-            'type': 'ir.actions.act_window',
-            'target': 'new',
-        }
+    @keep_wizard_open
+    def set_mtsskus_file(self):
+        self.mtsskus_file = self.get_mtsskus_file()
 
     def group_moves(self, Moves):
         grouped = {}
@@ -218,18 +221,11 @@ class OneBeatWizard(models.TransientModel):
         } for group in grouped]
 
         fieldnames = ['Origin', 'SKU Name', 'Destination', 'Transaction Type (in/out)', 'Quantity', 'Shipping Year', 'Shipping Month', 'Shipping Day', ]
-        self.transactions_file = base64.b64encode(data_to_bytes(fieldnames, data))
+        return base64.b64encode(data_to_bytes(fieldnames, data))
 
-        return {
-            'context': self.env.context,
-            'view_type': 'form',
-            'view_mode': 'form',
-            'res_model': self._name,
-            'res_id': self.id,
-            'view_id': False,
-            'type': 'ir.actions.act_window',
-            'target': 'new',
-        }
+    @keep_wizard_open
+    def set_transactions_file(self):
+        self.transactions_file = self.get_transactions_file()
 
     def get_status_file(self):
         now = self.datetime_localized(fields.Datetime.now(self))
@@ -278,7 +274,11 @@ class OneBeatWizard(models.TransientModel):
         } for location_id in Locations for product_id in Products]
 
         fieldnames = ['Stock Location Name', 'SKU Name', 'Inventory At Hand', 'Inventory On The Way', 'Reported Year', 'Reported Month', 'Reported Day', ]
-        self.status_file = base64.b64encode(data_to_bytes(fieldnames, data))
+        return base64.b64encode(data_to_bytes(fieldnames, data))
+
+    @keep_wizard_open
+    def set_status_file(self):
+        self.status_file = self.get_status_file()
 
         return {
             'context': self.env.context,
