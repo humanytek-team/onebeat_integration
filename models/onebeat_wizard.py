@@ -300,6 +300,8 @@ class OneBeatWizard(models.TransientModel):
         self.status_file = base64.b64encode(data)
 
     def send_to_ftp(self, start=None, stop=None):
+        start = start or fields.Datetime.from_string(fields.Datetime.context_timestamp(self)).replace(hour=0, minute=0, second=0)
+        stop = stop or start + timedelta(days=1)
         host = self.env.user.company_id.ftp_host
         port = self.env.user.company_id.ftp_port
         user = self.env.user.company_id.ftp_user
