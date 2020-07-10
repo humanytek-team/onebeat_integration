@@ -317,7 +317,7 @@ class OneBeatWizard(models.TransientModel):
         else:
             stocklocations = self.get_stocklocations_file()
             mtsskus = self.get_mtsskus_file()
-            transactions = self.get_transactions_file(start, stop)
+            transactions = self.get_transactions_file(str(start), str(stop))
             status = self.get_status_file()
             ftp.storbinary('STOR ' + stocklocations[0], BytesIO(stocklocations[1]))
             ftp.storbinary('STOR ' + mtsskus[0], BytesIO(mtsskus[1]))
