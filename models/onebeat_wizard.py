@@ -126,6 +126,7 @@ class OneBeatWizard(models.TransientModel):
         ])
         Products = self.env['product.product'].search([
             ('type', '!=', 'service'),
+            ('default_code', '!=', False),
         ])
         data = [{
             'Stock Location Name': clean(location_id.name),
@@ -251,6 +252,7 @@ class OneBeatWizard(models.TransientModel):
         ])
         Products = self.env['product.product'].search([
             ('type', '!=', 'service'),
+            ('default_code', '!=', False),
         ])
 
         Quants = self.env['stock.quant'].read_group(
