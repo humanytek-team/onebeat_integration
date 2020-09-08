@@ -200,6 +200,8 @@ class OneBeatWizard(models.TransientModel):
             ('state', 'in', ['done']),
             ('date', '>=', (start or self.start)),
             ('date', '<', (stop or self.stop)),
+            ('location_id.onebeat_ignore', '=', False),
+            ('location_dest_id.onebeat_ignore', '=', False),
             '|',
             '&',
             ('location_id.usage', '=', 'production'),
@@ -258,6 +260,7 @@ class OneBeatWizard(models.TransientModel):
         Quants = self.env['stock.quant'].read_group(
             domain=[
                 ('location_id.usage', '=', 'internal'),
+                ('location_id.onebeat_ignore', '=', False),
             ],
             fields=['product_id', 'quantity'],
             groupby=['product_id'],
@@ -267,6 +270,8 @@ class OneBeatWizard(models.TransientModel):
         Lines = self.env['stock.move.line'].read_group(
             domain=[
                 ('state', 'not in', ['done', 'draft', 'cancel']),
+                ('location_id.onebeat_ignore', '=', False),
+                ('location_dest_id.onebeat_ignore', '=', False),
                 ('location_id.usage', 'in', [
                     'supplier',
                 ]),

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'OneBeat integration',
-    'version': '12.0.1.4.0',
+    'version': '12.0.1.5.0',
     'author': 'Humanytek',
     'depends': [
         'mrp',
@@ -16,5 +16,6 @@
         'views/onebeat_wizard.xml',
         'views/product_template.xml',
         'views/res_company.xml',
+        'views/stock_location.xml',
     ],
 }
