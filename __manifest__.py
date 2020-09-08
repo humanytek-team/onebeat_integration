@@ -4,6 +4,7 @@
     'version': '12.0.1.4.0',
     'author': 'Humanytek',
     'depends': [
+        'mrp',
         'stock',
     ],
     'data': [
