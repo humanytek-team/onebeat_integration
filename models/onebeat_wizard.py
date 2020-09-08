@@ -262,10 +262,14 @@ class OneBeatWizard(models.TransientModel):
                 ('location_id.usage', '=', 'internal'),
                 ('location_id.onebeat_ignore', '=', False),
             ],
-            fields=['product_id', 'quantity'],
+            fields=[
+                'product_id',
+                'quantity',
+                'reserved_quantity',
+            ],
             groupby=['product_id'],
         )
-        quants_dict = {quant['product_id'][0]: quant['quantity'] for quant in Quants}
+        quants_dict = {quant['product_id'][0]: quant['quantity'] - quant['reserved_quantity'] for quant in Quants}
 
         Lines = self.env['stock.move.line'].read_group(
             domain=[
