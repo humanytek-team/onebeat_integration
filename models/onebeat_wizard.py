@@ -250,7 +250,11 @@ class OneBeatWizard(models.TransientModel):
             self.env.ref('stock.stock_location_stock'),
             self.env.ref('stock.stock_location_customers')
         ]
-        dates = self.get_dates_betwen(datetime.strptime(start, DEFAULT_SERVER_DATETIME_FORMAT), datetime.strptime(stop, DEFAULT_SERVER_DATETIME_FORMAT))
+        if type(start) == str:
+            start = datetime.strptime(start, DEFAULT_SERVER_DATETIME_FORMAT)
+        if type(stop) == str:
+            stop = datetime.strptime(stop, DEFAULT_SERVER_DATETIME_FORMAT)
+        dates = self.get_dates_betwen(start, stop)
         grouped = self._get_all_combinations(valid_products, valid_locations, dates)
         grouped.update(self.group_moves(Moves))
         data = [{
