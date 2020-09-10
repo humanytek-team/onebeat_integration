@@ -78,6 +78,8 @@ class OneBeatWizard(models.TransientModel):
         default=fields.Datetime.now,
         required=True,
     )
+    all_combinations = fields.Boolean(
+    )
 
     def get_dates_betwen(self, start, stop):
         return [(start + timedelta(days=x)).strftime(DEFAULT_SERVER_DATETIME_FORMAT) for x in range((stop - start).days)]
@@ -242,20 +244,23 @@ class OneBeatWizard(models.TransientModel):
             ]),
             ('same_usage', '=', False),
         ])
-        valid_products = self.env['product.product'].search([
-            ('type', '!=', 'service'),
-            ('default_code', '!=', False),
-        ])
-        valid_locations = [
-            self.env.ref('stock.stock_location_stock'),
-            self.env.ref('stock.stock_location_customers')
-        ]
-        if type(start) == str:
-            start = datetime.strptime(start, DEFAULT_SERVER_DATETIME_FORMAT)
-        if type(stop) == str:
-            stop = datetime.strptime(stop, DEFAULT_SERVER_DATETIME_FORMAT)
-        dates = self.get_dates_betwen(start, stop)
-        grouped = self._get_all_combinations(valid_products, valid_locations, dates)
+        if self.all_combinations:
+            valid_products = self.env['product.product'].search([
+                ('type', '!=', 'service'),
+                ('default_code', '!=', False),
+            ])
+            valid_locations = [
+                self.env.ref('stock.stock_location_stock'),
+                self.env.ref('stock.stock_location_customers')
+            ]
+            if type(start) == str:
+                start = datetime.strptime(start, DEFAULT_SERVER_DATETIME_FORMAT)
+            if type(stop) == str:
+                stop = datetime.strptime(stop, DEFAULT_SERVER_DATETIME_FORMAT)
+            dates = self.get_dates_betwen(start, stop)
+            grouped = self._get_all_combinations(valid_products, valid_locations, dates)
+        else:
+            grouped = dict()
         grouped.update(self.group_moves(Moves))
         data = [{
             'Origin': group[1],
