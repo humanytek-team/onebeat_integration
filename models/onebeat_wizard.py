@@ -84,7 +84,7 @@ class OneBeatWizard(models.TransientModel):
     def get_dates_betwen(self, start, stop):
         return [(start + timedelta(days=x)).strftime(DEFAULT_SERVER_DATETIME_FORMAT) for x in range((stop - start).days)]
 
-    def _get_all_combinations(self, products, locations, dates):
+    def _get_all_combinations(self, products, oringin_locations, dest_locations, dates):
         return {(
             product.default_code,
             location_id.name,
@@ -93,8 +93,8 @@ class OneBeatWizard(models.TransientModel):
             self.datetime_localized(date).strftime('%Y-%m-%d'),
         ): 0
             for product in products
-            for location_id in locations
-            for location_dest_id in locations
+            for location_id in oringin_locations
+            for location_dest_id in dest_locations
             for date in dates
             if location_id != location_dest_id
         }
@@ -249,16 +249,18 @@ class OneBeatWizard(models.TransientModel):
                 ('type', '!=', 'service'),
                 ('default_code', '!=', False),
             ])
-            valid_locations = [
+            origin_locations = [
                 self.env.ref('stock.stock_location_stock'),
-                self.env.ref('stock.stock_location_customers')
+            ]
+            dest_locations = [
+                self.env.ref('stock.stock_location_customers'),
             ]
             if type(start) == str:
                 start = datetime.strptime(start, DEFAULT_SERVER_DATETIME_FORMAT)
             if type(stop) == str:
                 stop = datetime.strptime(stop, DEFAULT_SERVER_DATETIME_FORMAT)
             dates = self.get_dates_betwen(start, stop)
-            grouped = self._get_all_combinations(valid_products, valid_locations, dates)
+            grouped = self._get_all_combinations(valid_products, origin_locations, dest_locations, dates)
         else:
             grouped = dict()
         grouped.update(self.group_moves(Moves))
