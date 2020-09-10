@@ -8,6 +8,7 @@ import pytz
 import logging
 
 from odoo import _, api, fields, models
+from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
 _logger = logging.getLogger(__name__)
 
@@ -77,6 +78,24 @@ class OneBeatWizard(models.TransientModel):
         default=fields.Datetime.now,
         required=True,
     )
+
+    def get_dates_betwen(self, start, stop):
+        return [(start + timedelta(days=x)).strftime(DEFAULT_SERVER_DATETIME_FORMAT) for x in range((stop - start).days)]
+
+    def _get_all_combinations(self, products, locations, dates):
+        return {(
+            product.default_code,
+            location_id.name,
+            location_dest_id.name,
+            'OUT' if location_id.usage == 'internal' else 'IN',
+            self.datetime_localized(date).strftime('%Y-%m-%d'),
+        ): 0
+            for product in products
+            for location_id in locations
+            for location_dest_id in locations
+            for date in dates
+            if location_id != location_dest_id
+        }
 
     def datetime_localized(self, date_time):
         now_utc = fields.Datetime.from_string(date_time)
@@ -195,11 +214,13 @@ class OneBeatWizard(models.TransientModel):
         return grouped
 
     def get_transactions_file(self, start=None, stop=None):
+        start = self.start or start
+        stop = self.stop or stop
         now = self.datetime_localized(fields.Datetime.now(self))
         Moves = self.env['stock.move'].search([
             ('state', 'in', ['done']),
-            ('date', '>=', (start or self.start)),
-            ('date', '<', (stop or self.stop)),
+            ('date', '>=', start),
+            ('date', '<', stop),
             ('location_id.onebeat_ignore', '=', False),
             ('location_dest_id.onebeat_ignore', '=', False),
             '|',
@@ -221,7 +242,17 @@ class OneBeatWizard(models.TransientModel):
             ]),
             ('same_usage', '=', False),
         ])
-        grouped = self.group_moves(Moves)
+        valid_products = self.env['product.product'].search([
+            ('type', '!=', 'service'),
+            ('default_code', '!=', False),
+        ])
+        valid_locations = [
+            self.env.ref('stock.stock_location_stock'),
+            self.env.ref('stock.stock_location_customers')
+        ]
+        dates = self.get_dates_betwen(datetime.strptime(start, DEFAULT_SERVER_DATETIME_FORMAT), datetime.strptime(stop, DEFAULT_SERVER_DATETIME_FORMAT))
+        grouped = self._get_all_combinations(valid_products, valid_locations, dates)
+        grouped.update(self.group_moves(Moves))
         data = [{
             'Origin': group[1],
             'SKU Name':group[0],
