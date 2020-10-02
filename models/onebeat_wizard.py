@@ -299,20 +299,6 @@ class OneBeatWizard(models.TransientModel):
             ('default_code', '!=', False),
         ])
 
-        Quants = self.env['stock.quant'].read_group(
-            domain=[
-                ('location_id.usage', '=', 'internal'),
-                ('location_id.onebeat_ignore', '=', False),
-            ],
-            fields=[
-                'product_id',
-                'quantity',
-                'reserved_quantity',
-            ],
-            groupby=['product_id'],
-        )
-        quants_dict = {quant['product_id'][0]: quant['quantity'] - quant['reserved_quantity'] for quant in Quants}
-
         Lines = self.env['stock.move.line'].read_group(
             domain=[
                 ('state', 'not in', ['done', 'draft', 'cancel']),
@@ -333,7 +319,7 @@ class OneBeatWizard(models.TransientModel):
         data = [{
             'Stock Location Name': clean(location_id.name),
             'SKU Name': clean(product_id.default_code),
-            'Inventory At Hand': quants_dict.get(product_id.id, 0),
+            'Inventory At Hand': product_id.virtual_available,
             'Inventory On The Way': lines_dict.get(product_id.id, 0),
             'Reported Year': year,
             'Reported Month': month,
