@@ -8,6 +8,7 @@ from io import BytesIO, StringIO
 import pytz
 
 from odoo import fields, models
+from odoo.exceptions import ValidationError
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
 _logger = logging.getLogger(__name__)
@@ -72,6 +73,11 @@ class OneBeatWizard(models.TransientModel):
         required=True,
     )
     all_combinations = fields.Boolean()
+    production_default_location_id = fields.Many2one(
+        comodel_name="stock.location",
+        domain=[("usage", "=", "production")],
+        required=True,
+    )
 
     def get_dates_betwen(self, start, stop):
         return [
@@ -83,16 +89,16 @@ class OneBeatWizard(models.TransientModel):
         return {
             (
                 product.default_code,
-                location_id.name,
-                location_dest_id.name,
-                "OUT" if location_id.usage == "internal" else "IN",
+                location.name,
+                location_dest.name,
+                "OUT" if location.usage == "internal" else "IN",
                 self.datetime_localized(date).strftime("%Y-%m-%d"),
             ): 0
             for product in products
-            for location_id in oringin_locations
-            for location_dest_id in dest_locations
+            for location in oringin_locations
+            for location_dest in dest_locations
             for date in dates
-            if location_id != location_dest_id
+            if location != location_dest
         }
 
     def datetime_localized(self, date_time):
@@ -101,7 +107,11 @@ class OneBeatWizard(models.TransientModel):
         return pytz.utc.localize(now_utc).astimezone(tz)
 
     def get_company_id(self):
-        return self.env.user.company_id.vat[:3]
+        if not self.env.company.vat:
+            raise ValidationError(
+                f"The company `{self.env.company.name}` does not have a valid VAT"
+            )
+        return self.env.company.vat[:3]
 
     def get_stocklocations_file(self):
         now = self.datetime_localized(fields.Datetime.now(self))
@@ -112,19 +122,19 @@ class OneBeatWizard(models.TransientModel):
                 self.env.ref("stock.stock_location_stock").id,
                 self.env.ref("stock.stock_location_customers").id,
                 self.env.ref("stock.stock_location_suppliers").id,
-                self.env.ref("stock.location_production").id,
+                self.production_default_location_id.id,
             ]
         )
         data = [
             {
-                "Nombre Agencia": clean(location_id.name),
-                "Descripción": clean(location_id.barcode),
+                "Nombre Agencia": clean(location.name),
+                "Descripción": clean(location.barcode),
                 "Año reporte": year,
                 "Mes Reporte": month,
                 "Dia Reporte": day,
                 "Ubicación": None,
             }
-            for location_id in Locations
+            for location in Locations
         ]
 
         fieldnames = [
@@ -146,6 +156,14 @@ class OneBeatWizard(models.TransientModel):
         self.stocklocations_file_fname = fname
         self.stocklocations_file = base64.b64encode(data)
 
+    def get_product_origin_location(self, product):
+        if product.seller_ids:
+            return product.seller_ids[0].name.property_stock_supplier
+        if product.property_stock_production:
+            return product.property_stock_production
+        else:
+            return self.production_default_location_id
+
     def get_mtsskus_file(self):
         now = self.datetime_localized(fields.Datetime.now(self))
         year, month, day = now.strftime("%Y-%m-%d").split("-")
@@ -163,30 +181,28 @@ class OneBeatWizard(models.TransientModel):
         )
         data = [
             {
-                "Stock Location Name": clean(location_id.name),
-                "Origin SL": clean(product_id.seller_ids[0].name.property_stock_supplier.name)
-                if product_id.seller_ids
-                else self.env.ref("stock.location_production").name,
-                "SKU Name": clean(product_id.default_code),
-                "SKU Description": clean(product_id.name),
-                "Buffer Size": product_id.buffer_size,
-                "Replenishment Time": product_id.seller_ids[0].delay
-                if product_id.seller_ids
-                else product_id.produce_delay,
+                "Stock Location Name": clean(location.name),
+                "Origin SL": clean(self.get_product_origin_location(product).name),
+                "SKU Name": clean(product.default_code),
+                "SKU Description": clean(product.name),
+                "Buffer Size": product.buffer_size,
+                "Replenishment Time": product.seller_ids[0].delay
+                if product.seller_ids
+                else product.produce_delay,
                 "Inventory at Site": 0,
                 "Inventory at Transit": 0,
                 "Inventory at Production": 0,
-                "Precio unitario": product_id.list_price,
-                "TVC": product_id.standard_price,
-                "Throughput": max(product_id.list_price - product_id.standard_price, 0),
+                "Precio unitario": product.list_price,
+                "TVC": product.standard_price,
+                "Throughput": max(product.list_price - product.standard_price, 0),
                 # 'Minimo Reabastecimiento': None,
-                "Unidad de Medida": clean(product_id.uom_id.name),
+                "Unidad de Medida": clean(product.uom_id.name),
                 "Reported Year": year,
                 "Reported Month": month,
                 "Reported Day": day,
             }
-            for location_id in Locations
-            for product_id in Products
+            for location in Locations
+            for product in Products
         ]
 
         fieldnames = [
@@ -221,18 +237,18 @@ class OneBeatWizard(models.TransientModel):
 
     def group_moves(self, Moves):
         grouped = {}
-        for move_id in Moves:
-            if move_id.location_id.usage == move_id.location_dest_id.usage:
+        for move in Moves:
+            if move.location_id.usage == move.location_dest_id.usage:
                 continue
-            date = self.datetime_localized(move_id.date).strftime("%Y-%m-%d")
+            date = self.datetime_localized(move.date).strftime("%Y-%m-%d")
             key = (
-                move_id.product_id.default_code,
-                move_id.location_id.name,
-                move_id.location_dest_id.name,
-                "OUT" if move_id.location_id.usage == "internal" else "IN",
+                move.product_id.default_code,
+                move.location_id.name,
+                move.location_dest_id.name,
+                "OUT" if move.location_id.usage == "internal" else "IN",
                 date,
             )
-            grouped[key] = grouped.get(key, 0) + move_id.quantity_done
+            grouped[key] = grouped.get(key, 0) + move.quantity_done
         return grouped
 
     def get_transactions_file(self, start=None, stop=None):
@@ -376,16 +392,16 @@ class OneBeatWizard(models.TransientModel):
 
         data = [
             {
-                "Stock Location Name": clean(location_id.name),
-                "SKU Name": clean(product_id.default_code),
-                "Inventory At Hand": product_id.virtual_available,
-                "Inventory On The Way": lines_dict.get(product_id.id, 0),
+                "Stock Location Name": clean(location.name),
+                "SKU Name": clean(product.default_code),
+                "Inventory At Hand": product.virtual_available,
+                "Inventory On The Way": lines_dict.get(product.id, 0),
                 "Reported Year": year,
                 "Reported Month": month,
                 "Reported Day": day,
             }
-            for location_id in Locations
-            for product_id in Products
+            for location in Locations
+            for product in Products
         ]
 
         fieldnames = [
@@ -412,10 +428,10 @@ class OneBeatWizard(models.TransientModel):
         now = self.datetime_localized(fields.Datetime.now(self))
         start = start or now.replace(hour=0, minute=0, second=0)
         stop = stop or start + timedelta(days=1)
-        host = self.env.user.company_id.ftp_host
-        port = self.env.user.company_id.ftp_port
-        user = self.env.user.company_id.ftp_user
-        passwd = self.env.user.company_id.ftp_passwd
+        host = self.env.company.ftp_host
+        port = self.env.company.ftp_port
+        user = self.env.company.ftp_user
+        passwd = self.env.company.ftp_passwd
         ftp_tls = False
         ftp = FTP_TLS() if ftp_tls else FTP()
         try:

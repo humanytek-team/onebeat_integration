@@ -9,6 +9,7 @@
                     <group>
                         <field name="start"/>
                         <field name="stop"/>
+                        <field name="production_default_location_id"/>
                     </group>
                     <group>
                         <field name="all_combinations"/>
