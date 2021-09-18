@@ -44,7 +44,12 @@
         </field>
     </record>
 
-    <act_window id="onebeat_wizard_action" name="Create Files" res_model="onebeat_wizard" view_mode="form" target="new"/>
+    <record id="onebeat_wizard_action" model="ir.actions.act_window">
+        <field name="name">OneBeat Wizard</field>
+        <field name="res_model">onebeat_wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
 
     <menuitem id="onebeat_wizard_menu" parent="stock.menu_warehouse_report" name="OneBeat" sequence="10" action="onebeat_wizard_action"/>
 </odoo>

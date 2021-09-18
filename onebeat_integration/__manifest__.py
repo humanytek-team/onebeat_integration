@@ -9,6 +9,7 @@
     ],
     "data": [
         # security
+        "security/ir.model.access.csv",
         # data
         "data/ir_cron.xml",
         # reports

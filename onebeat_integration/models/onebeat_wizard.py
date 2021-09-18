@@ -12,11 +12,6 @@ from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
 _logger = logging.getLogger(__name__)
 
-# self.env.ref('stock.stock_location_stock')
-# self.env.ref('stock.stock_location_customers')
-# self.env.ref('stock.stock_location_suppliers')
-# self.env.ref('stock.location_production')
-
 
 def data_to_bytes(fieldnames, data):
     writer_file = StringIO()
@@ -50,6 +45,7 @@ def keep_wizard_open(f):
 
 class OneBeatWizard(models.TransientModel):
     _name = "onebeat_wizard"
+    _description = "OneBeat Wizard"
 
     stocklocations_file = fields.Binary(
         readonly=True,

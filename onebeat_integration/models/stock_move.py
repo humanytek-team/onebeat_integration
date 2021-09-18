@@ -6,7 +6,7 @@ class StockMove(models.Model):
 
     same_usage = fields.Boolean(
         compute="_compute_same_usage",
-        stored=True,
+        store=True,
     )
 
     @api.depends("location_id", "location_dest_id")
