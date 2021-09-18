@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="onebeat_wizard_view_form" model="ir.ui.view">
+        <field name="name">onebeat_wizard.view.form.inherit.fillrate100</field>
+        <field name="model">onebeat_wizard</field>
+        <field name="inherit_id" ref="onebeat_integration.onebeat_wizard_view_form"/>
+        <field name="arch" type="xml">
+            <field name="all_combinations" position="after">
+                <field name="fillrate100_format"/>
+            </field>
+        </field>
+    </record>
+</odoo>
