@@ -300,7 +300,7 @@ class OneBeatWizard(models.TransientModel):
                 valid_products, origin_locations, dest_locations, dates
             )
         else:
-            grouped = dict()
+            grouped = {}
         grouped.update(self.group_moves(Moves))
         data = [
             {
