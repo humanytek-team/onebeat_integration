@@ -1,4 +1,5 @@
 import csv
+from datetime import datetime
 
 from odoo import fields, models
 
@@ -17,9 +18,8 @@ class OneBeatWizard(models.TransientModel):
 
     fillrate100_format = fields.Boolean()
 
-    def mtsskus_data_to_fillrate(self, data):
-        csv_file = bytes_to_csv(data)
-        parser = (
+    def mtksskus_fillrate_parser(self):
+        return (
             ("External id", ""),
             ("sku", "SKU Name"),
             ("location", "Stock Location Name"),
@@ -32,23 +32,62 @@ class OneBeatWizard(models.TransientModel):
             ("min_qty", ""),
             ("multiple", ""),
         )
-        lines = [{new: line.get(old, "") for new, old in parser} for line in csv_file]
+
+    def transactions_fillrate_parser(self):
+        return (
+            ("External id", ""),
+            ("replenishment order", ""),
+            (
+                "order_date",
+                lambda line: datetime.strptime(
+                    f"{line['Shipping Year']}-{line['Shipping Month']}-{line['Shipping Day']}",
+                    "%Y-%m-%d",
+                ),
+            ),
+            ("skuloc", ""),
+            ("sku", "SKU Name"),
+            ("destination", "Destination"),
+            ("description", ""),
+            ("Origin", "Origin"),
+            ("quantity", "Quantity"),
+        )
+
+    def status_fillrate_parser(self):
+        return (
+            ("External id", ""),
+            ("sku", "SKU Name"),
+            ("location", "Stock Location Name"),
+            ("description", ""),
+            ("onhand", "Inventory At Hand"),
+            ("transit", "Inventory On The Way"),
+        )
+
+    def get_old_line_value(self, line, old):
+        if callable(old):
+            return old(line)
+        return line.get(old, "")
+
+    def data_to_fillrate(self, parser, data):
+        csv_file = bytes_to_csv(data)
+        lines = [
+            {new: self.get_old_line_value(line, old) for new, old in parser} for line in csv_file
+        ]
         return data_to_bytes([new for new, _old in parser], lines)
 
     def get_mtsskus_file(self):
         fname, data = super(OneBeatWizard, self).get_mtsskus_file()
         if self.fillrate100_format:
-            data = self.mtsskus_data_to_fillrate(data)
+            data = self.data_to_fillrate(self.mtksskus_fillrate_parser(), data)
         return fname, data
 
     def get_transactions_file(self):
         fname, data = super(OneBeatWizard, self).get_transactions_file()
         if self.fillrate100_format:
-            pass  # TODO
+            data = self.data_to_fillrate(self.transactions_fillrate_parser(), data)
         return fname, data
 
     def get_status_file(self):
         fname, data = super(OneBeatWizard, self).get_status_file()
         if self.fillrate100_format:
-            pass  # TODO
+            data = self.data_to_fillrate(self.status_fillrate_parser(), data)
         return fname, data
