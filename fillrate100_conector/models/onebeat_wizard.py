@@ -57,7 +57,7 @@ class OneBeatWizard(models.TransientModel):
             ("External id", ""),
             ("sku", "SKU Name"),
             ("location", "Stock Location Name"),
-            ("description", ""),
+            ("description", "SKU Description"),
             ("onhand", "Inventory At Hand"),
             ("transit", "Inventory On The Way"),
         )

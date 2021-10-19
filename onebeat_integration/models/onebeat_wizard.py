@@ -186,9 +186,9 @@ class OneBeatWizard(models.TransientModel):
                 "SKU Name": clean(product.default_code),
                 "SKU Description": clean(product.name),
                 "Buffer Size": product.buffer_size,
-                "Replenishment Time": product.seller_ids[0].delay
-                if product.seller_ids
-                else product.produce_delay,
+                "Replenishment Time": int(
+                    product.seller_ids[0].delay if product.seller_ids else product.produce_delay
+                ),
                 "Inventory at Site": 0,
                 "Inventory at Transit": 0,
                 "Inventory at Production": 0,
@@ -394,6 +394,7 @@ class OneBeatWizard(models.TransientModel):
             {
                 "Stock Location Name": clean(location.name),
                 "SKU Name": clean(product.default_code),
+                "SKU Description": clean(product.name),
                 "Inventory At Hand": product.virtual_available,
                 "Inventory On The Way": lines_dict.get(product.id, 0),
                 "Reported Year": year,
@@ -407,6 +408,7 @@ class OneBeatWizard(models.TransientModel):
         fieldnames = [
             "Stock Location Name",
             "SKU Name",
+            "SKU Description",
             "Inventory At Hand",
             "Inventory On The Way",
             "Reported Year",
