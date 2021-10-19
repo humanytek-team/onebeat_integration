@@ -1,5 +1,5 @@
 {
-    "name": "OneBeat Fillrate100",
+    "name": "Fillrate100 Connector",
     "version": "14.0.0.1.0",
     "author": "Humanytek",
     "license": "LGPL-3",

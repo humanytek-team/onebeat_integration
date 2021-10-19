@@ -10,4 +10,6 @@
             </field>
         </field>
     </record>
+
+    <menuitem id="onebeat_integration.onebeat_wizard_menu" name="Fillrate100" parent="stock.menu_warehouse_report"/>
 </odoo>

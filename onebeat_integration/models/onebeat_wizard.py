@@ -103,7 +103,7 @@ class OneBeatWizard(models.TransientModel):
 
     def datetime_localized(self, date_time):
         now_utc = fields.Datetime.from_string(date_time)
-        tz = pytz.timezone(self.env.user.tz or pytz.utc)
+        tz = pytz.timezone(self.env.user.tz or "UTC")
         return pytz.utc.localize(now_utc).astimezone(tz)
 
     def get_company_id(self):
