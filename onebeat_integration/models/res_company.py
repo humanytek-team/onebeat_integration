@@ -14,3 +14,6 @@ class ResCompany(models.Model):
     ftp_passwd = fields.Char(
         string="Password",
     )
+    ftp_tls = fields.Boolean(
+        string="TLS",
+    )

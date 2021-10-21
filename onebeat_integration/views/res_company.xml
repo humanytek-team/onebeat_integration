@@ -15,12 +15,12 @@
                         <group>
                             <field name="ftp_user"/>
                             <field name="ftp_passwd" password="True"/>
+                            <field name="ftp_tls"/>
                         </group>
                     </group>
                 </page>
             </notebook>
         </field>
     </record>
-
 
 </odoo>

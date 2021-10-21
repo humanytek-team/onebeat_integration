@@ -426,7 +426,7 @@ class OneBeatWizard(models.TransientModel):
         self.status_file_fname = fname
         self.status_file = base64.b64encode(data)
 
-    def send_to_ftp(self, start=None, stop=None):
+    def send_to_ftp(self, start=None, stop=None, location=None):
         now = self.datetime_localized(fields.Datetime.now(self))
         start = start or now.replace(hour=0, minute=0, second=0)
         stop = stop or start + timedelta(days=1)
@@ -434,7 +434,8 @@ class OneBeatWizard(models.TransientModel):
         port = self.env.company.ftp_port
         user = self.env.company.ftp_user
         passwd = self.env.company.ftp_passwd
-        ftp_tls = False
+        passwd = self.env.company.ftp_passwd
+        ftp_tls = self.env.company.ftp_tls
         ftp = FTP_TLS() if ftp_tls else FTP()
         try:
             ftp.connect(host, port)
@@ -446,6 +447,8 @@ class OneBeatWizard(models.TransientModel):
             mtsskus = self.get_mtsskus_file()
             transactions = self.get_transactions_file(str(start), str(stop))
             status = self.get_status_file()
+            if location:
+                ftp.cwd(location)
             ftp.storbinary("STOR " + stocklocations[0], BytesIO(stocklocations[1]))
             ftp.storbinary("STOR " + mtsskus[0], BytesIO(mtsskus[1]))
             ftp.storbinary("STOR " + transactions[0], BytesIO(transactions[1]))
