@@ -75,6 +75,3 @@ class OnebeatBuffer(models.Model):
             ]
         )
         return buffers + news
-
-    def update_buffer(self, buffers):
-        pass  # TODO
