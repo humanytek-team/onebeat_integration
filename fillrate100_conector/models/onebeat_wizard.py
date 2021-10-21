@@ -1,9 +1,14 @@
 import csv
 from datetime import datetime
+from io import BytesIO
+
+import pysftp
 
 from odoo import fields, models
 
 from odoo.addons.onebeat_integration.models.onebeat_wizard import data_to_bytes
+
+BUFFER_FILE = "ftp/buffers_update.csv"
 
 
 def bytes_to_csv(bytes: bytes):
@@ -93,3 +98,15 @@ class OneBeatWizard(models.TransientModel):
         if self.fillrate100_format:
             data = self.data_to_fillrate(self.status_fillrate_parser(), data)
         return f"input_{fname}", data
+
+    def _get_new_buffers(self):
+        ftp: pysftp.Connection = self.get_ftp_connector()
+        buffer_file = BytesIO()
+        ftp.getfo(BUFFER_FILE, buffer_file)
+        ftp.close()
+        buffer_file.seek(0)
+        return buffer_file.read().decode("utf-8")
+
+    def update_buffers_from_ftp(self):
+        content = self._get_new_buffers()
+        self.env["onebeat.buffer"].update_buffers(content)
