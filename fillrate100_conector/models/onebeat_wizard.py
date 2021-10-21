@@ -78,16 +78,16 @@ class OneBeatWizard(models.TransientModel):
         fname, data = super(OneBeatWizard, self).get_mtsskus_file()
         if self.fillrate100_format:
             data = self.data_to_fillrate(self.mtksskus_fillrate_parser(), data)
-        return fname, data
+        return f"input_{fname}", data
 
     def get_transactions_file(self):
         fname, data = super(OneBeatWizard, self).get_transactions_file()
         if self.fillrate100_format:
             data = self.data_to_fillrate(self.transactions_fillrate_parser(), data)
-        return fname, data
+        return f"input_{fname}", data
 
     def get_status_file(self):
         fname, data = super(OneBeatWizard, self).get_status_file()
         if self.fillrate100_format:
             data = self.data_to_fillrate(self.status_fillrate_parser(), data)
-        return fname, data
+        return f"input_{fname}", data
