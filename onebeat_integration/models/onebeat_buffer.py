@@ -55,7 +55,7 @@ class OnebeatBuffer(models.Model):
                 ("location_id", "in", locations.ids),
             ]
         )
-        current_set = {(buffer.product.id, buffer.location.id) for buffer in buffers}
+        current_set = {(buffer.product_id.id, buffer.location_id.id) for buffer in buffers}
         all_set = {(product.id, location.id) for product in products for location in locations}
         to_create = all_set - current_set
         replenishment_times = {

@@ -2,9 +2,10 @@ import base64
 import csv
 import logging
 from datetime import datetime, timedelta
-from ftplib import FTP, FTP_TLS
+from ftplib import FTP
 from io import BytesIO, StringIO
 
+import pysftp
 import pytz
 
 from odoo import fields, models
@@ -48,6 +49,9 @@ class OneBeatWizard(models.TransientModel):
     _name = "onebeat_wizard"
     _description = "OneBeat Wizard"
 
+    def default_production_location_id(self):
+        return self.env["stock.location"].search([("usage", "=", "production")], limit=1)
+
     stocklocations_file = fields.Binary(
         readonly=True,
     )
@@ -77,6 +81,7 @@ class OneBeatWizard(models.TransientModel):
         comodel_name="stock.location",
         domain=[("usage", "=", "production")],
         required=True,
+        default=default_production_location_id,
     )
 
     def get_dates_betwen(self, start, stop):
@@ -427,17 +432,41 @@ class OneBeatWizard(models.TransientModel):
         self.status_file_fname = fname
         self.status_file = base64.b64encode(data)
 
+    def _get_sftp_connection(self, host, port, username, password):
+        cnopts = pysftp.CnOpts()
+        cnopts.hostkeys = None
+        return pysftp.Connection(
+            host=host, username=username, password=password, cnopts=cnopts, port=port
+        )
+
+    def _send_to_sftp(self, start, stop, host, port, user, passwd, location):
+        ftp = self._get_sftp_connection(host, port, user, passwd)
+        stocklocations = self.get_stocklocations_file()
+        mtsskus = self.get_mtsskus_file()
+        transactions = self.get_transactions_file(start, stop)
+        status = self.get_status_file()
+        if location:
+            ftp.chdir(location)
+        ftp.putfo(BytesIO(stocklocations[1]), stocklocations[0])
+        ftp.putfo(BytesIO(mtsskus[1]), mtsskus[0])
+        ftp.putfo(BytesIO(transactions[1]), transactions[0])
+        ftp.putfo(BytesIO(status[1]), status[0])
+        ftp.close()
+
     def send_to_ftp(self, start=None, stop=None, location=None):
         now = self.datetime_localized(fields.Datetime.now(self))
         start = start or now.replace(hour=0, minute=0, second=0)
-        stop = stop or start + timedelta(days=1)
+        stop = str(stop or start + timedelta(days=1))
+        start = str(start)
         host = self.env.company.ftp_host
         port = self.env.company.ftp_port
         user = self.env.company.ftp_user
         passwd = self.env.company.ftp_passwd
-        passwd = self.env.company.ftp_passwd
         ftp_tls = self.env.company.ftp_tls
-        ftp = FTP_TLS() if ftp_tls else FTP()
+        if ftp_tls:
+            self._send_to_sftp(start, stop, host, port, user, passwd, location)
+            return
+        ftp = FTP()
         try:
             ftp.connect(host, port)
             ftp.login(user, passwd)
@@ -446,7 +475,7 @@ class OneBeatWizard(models.TransientModel):
         else:
             stocklocations = self.get_stocklocations_file()
             mtsskus = self.get_mtsskus_file()
-            transactions = self.get_transactions_file(str(start), str(stop))
+            transactions = self.get_transactions_file(start, stop)
             status = self.get_status_file()
             if location:
                 ftp.cwd(location)

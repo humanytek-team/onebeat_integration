@@ -16,7 +16,9 @@ def bytes_to_csv(bytes: bytes):
 class OneBeatWizard(models.TransientModel):
     _inherit = "onebeat_wizard"
 
-    fillrate100_format = fields.Boolean()
+    fillrate100_format = fields.Boolean(
+        default=True,
+    )
 
     def mtksskus_fillrate_parser(self):
         return (
@@ -80,8 +82,8 @@ class OneBeatWizard(models.TransientModel):
             data = self.data_to_fillrate(self.mtksskus_fillrate_parser(), data)
         return f"input_{fname}", data
 
-    def get_transactions_file(self):
-        fname, data = super(OneBeatWizard, self).get_transactions_file()
+    def get_transactions_file(self, start=None, stop=None):
+        fname, data = super(OneBeatWizard, self).get_transactions_file(start, stop)
         if self.fillrate100_format:
             data = self.data_to_fillrate(self.transactions_fillrate_parser(), data)
         return f"input_{fname}", data
