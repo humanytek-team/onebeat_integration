@@ -14,6 +14,7 @@
         "data/ir_cron.xml",
         # reports
         # views
+        "views/onebeat_buffer.xml",
         "views/onebeat_wizard.xml",
         "views/product_template.xml",
         "views/res_company.xml",

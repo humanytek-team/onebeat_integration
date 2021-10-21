@@ -179,30 +179,31 @@ class OneBeatWizard(models.TransientModel):
                 ("default_code", "!=", False),
             ]
         )
+        Buffers = self.env["onebeat.buffer"]
+        buffers = Buffers.generate_all_combinations(Products, Locations)
         data = [
             {
-                "Stock Location Name": clean(location.name),
-                "Origin SL": clean(self.get_product_origin_location(product).name),
-                "SKU Name": clean(product.default_code),
-                "SKU Description": clean(product.name),
-                "Buffer Size": product.buffer_size,
-                "Replenishment Time": int(
-                    product.seller_ids[0].delay if product.seller_ids else product.produce_delay
+                "Stock Location Name": clean(buffer.location_id.name),
+                "Origin SL": clean(self.get_product_origin_location(buffer.product_id).name),
+                "SKU Name": clean(buffer.product_id.default_code),
+                "SKU Description": clean(buffer.product_id.name),
+                "Buffer Size": buffer.buffer_size,
+                "Replenishment Time": buffer.replenishment_time,
+                "Inventory at Site": 0,  # TODO
+                "Inventory at Transit": 0,  # TODO
+                "Inventory at Production": 0,  # TODO
+                "Precio unitario": buffer.product_id.list_price,
+                "TVC": buffer.product_id.standard_price,
+                "Throughput": max(
+                    buffer.product_id.list_price - buffer.product_id.standard_price, 0
                 ),
-                "Inventory at Site": 0,
-                "Inventory at Transit": 0,
-                "Inventory at Production": 0,
-                "Precio unitario": product.list_price,
-                "TVC": product.standard_price,
-                "Throughput": max(product.list_price - product.standard_price, 0),
                 # 'Minimo Reabastecimiento': None,
-                "Unidad de Medida": clean(product.uom_id.name),
+                "Unidad de Medida": clean(buffer.product_id.uom_id.name),
                 "Reported Year": year,
                 "Reported Month": month,
                 "Reported Day": day,
             }
-            for location in Locations
-            for product in Products
+            for buffer in buffers
         ]
 
         fieldnames = [

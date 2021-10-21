@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="onebeat_buffer_view_form" model="ir.ui.view">
+        <field name="name">onebeat_buffer.view.form</field>
+        <field name="model">onebeat.buffer</field>
+        <field name="arch" type="xml">
+            <tree decoration-warning="buffer_size == 0" multi_edit="1">
+                <field name="product_id"/>
+                <field name="location_id"/>
+                <field name="buffer_size"/>
+                <field name="replenishment_time"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="onebeat_buffer_action" model="ir.actions.act_window">
+        <field name="name">OneBeat Buffers</field>
+        <field name="res_model">onebeat.buffer</field>
+        <field name="view_mode">tree</field>
+    </record>
+
+    <menuitem id="onebeat_buffer_menu" parent="stock.menu_stock_inventory_control" name="Buffers" sequence="10" action="onebeat_buffer_action"/>
+</odoo>
