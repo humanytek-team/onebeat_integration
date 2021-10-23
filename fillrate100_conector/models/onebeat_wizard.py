@@ -88,21 +88,23 @@ class OneBeatWizard(models.TransientModel):
 
     def get_mtsskus_file(self):
         fname, data = super(OneBeatWizard, self).get_mtsskus_file()
-        if self.fillrate100_format:
+        if self.fillrate100_format or not self.ids:
             data = self.data_to_fillrate(self.mtksskus_fillrate_parser(), data)
-        return f"input_{fname}", data
+        return fname, data
 
     def get_transactions_file(self, start=None, stop=None):
         fname, data = super(OneBeatWizard, self).get_transactions_file(start, stop)
-        if self.fillrate100_format:
+        if self.fillrate100_format or not self.ids:
             data = self.data_to_fillrate(self.transactions_fillrate_parser(), data)
-        return f"input_{fname}", data
+            fname = f"input_{fname}"
+        return fname, data
 
     def get_status_file(self):
         fname, data = super(OneBeatWizard, self).get_status_file()
-        if self.fillrate100_format:
+        if self.fillrate100_format or not self.ids:
             data = self.data_to_fillrate(self.status_fillrate_parser(), data)
-        return f"input_{fname}", data
+            fname = f"input_{fname}"
+        return fname, data
 
     def _get_new_buffers(self):
         ftp: pysftp.Connection = self.get_ftp_connector()
