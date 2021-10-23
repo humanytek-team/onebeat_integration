@@ -27,7 +27,7 @@ class OneBeatWizard(models.TransientModel):
 
     def mtksskus_fillrate_parser(self):
         return (
-            ("Name", self._get_fillrate_name),
+            ("name", self._get_fillrate_name),
             ("sku", "SKU Name"),
             ("location", "Stock Location Name"),
             ("description", "SKU Description"),
@@ -47,7 +47,7 @@ class OneBeatWizard(models.TransientModel):
 
     def transactions_fillrate_parser(self):
         return (
-            ("Name", self._get_fillrate_name),
+            ("name", self._get_fillrate_name),
             ("replenishment order", ""),
             (
                 "order_date",
@@ -66,7 +66,7 @@ class OneBeatWizard(models.TransientModel):
 
     def status_fillrate_parser(self):
         return (
-            ("Name", self._get_fillrate_name),
+            ("name", self._get_fillrate_name),
             ("sku", "SKU Name"),
             ("location", "Stock Location Name"),
             ("description", "SKU Description"),
