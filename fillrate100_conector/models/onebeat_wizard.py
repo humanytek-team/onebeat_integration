@@ -1,6 +1,7 @@
 import csv
 from datetime import datetime
 from io import BytesIO
+from typing import OrderedDict
 
 import pysftp
 
@@ -27,7 +28,7 @@ class OneBeatWizard(models.TransientModel):
 
     def mtksskus_fillrate_parser(self):
         return (
-            ("External id", ""),
+            ("Name", self._get_fillrate_name),
             ("sku", "SKU Name"),
             ("location", "Stock Location Name"),
             ("description", "SKU Description"),
@@ -40,9 +41,14 @@ class OneBeatWizard(models.TransientModel):
             ("multiple", ""),
         )
 
+    def _get_fillrate_name(self, line):
+        if isinstance(line, OrderedDict):
+            return f"{line['SKU Name']}{line['Stock Location Name']}"
+        return f"{line.product_id.default_code}{self._get_location_name(line.location_id)}"
+
     def transactions_fillrate_parser(self):
         return (
-            ("External id", ""),
+            ("Name", self._get_fillrate_name),
             ("replenishment order", ""),
             (
                 "order_date",
@@ -61,7 +67,7 @@ class OneBeatWizard(models.TransientModel):
 
     def status_fillrate_parser(self):
         return (
-            ("External id", ""),
+            ("Name", self._get_fillrate_name),
             ("sku", "SKU Name"),
             ("location", "Stock Location Name"),
             ("description", "SKU Description"),

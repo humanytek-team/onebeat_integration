@@ -185,7 +185,7 @@ class OneBeatWizard(models.TransientModel):
         buffers = Buffers.generate_all_combinations(Products, Locations)
         data = [
             {
-                "Stock Location Name": clean(buffer.location_id.name),
+                "Stock Location Name": clean(self._get_location_name(buffer.location_id)),
                 "Origin SL": clean(self.get_product_origin_location(buffer.product_id).name),
                 "SKU Name": clean(buffer.product_id.default_code),
                 "SKU Description": clean(buffer.product_id.name),
@@ -246,8 +246,8 @@ class OneBeatWizard(models.TransientModel):
             date = self.datetime_localized(move.date).strftime("%Y-%m-%d")
             key = (
                 move.product_id.default_code,
-                move.location_id.name,
-                move.location_dest_id.name,
+                self._get_location_name(move.location_id),
+                self._get_location_name(move.location_dest_id),
                 "OUT" if move.location_id.usage == "internal" else "IN",
                 date,
             )
@@ -395,7 +395,7 @@ class OneBeatWizard(models.TransientModel):
 
         data = [
             {
-                "Stock Location Name": clean(location.name),
+                "Stock Location Name": clean(self._get_location_name(location)),
                 "SKU Name": clean(product.default_code),
                 "SKU Description": clean(product.name),
                 "Inventory At Hand": product.virtual_available,
@@ -501,3 +501,6 @@ class OneBeatWizard(models.TransientModel):
             status,
         )
         ftp.close()
+
+    def _get_location_name(self, location):
+        return location.complete_name
