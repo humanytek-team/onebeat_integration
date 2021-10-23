@@ -1,7 +1,6 @@
 import csv
 from datetime import datetime
 from io import BytesIO
-from typing import OrderedDict
 
 import pysftp
 
@@ -42,7 +41,7 @@ class OneBeatWizard(models.TransientModel):
         )
 
     def _get_fillrate_name(self, line):
-        if isinstance(line, OrderedDict):
+        if isinstance(line, dict):
             return f"{line['SKU Name']}{line['Stock Location Name']}"
         return f"{line.product_id.default_code}{self._get_location_name(line.location_id)}"
 
