@@ -170,6 +170,11 @@ class OneBeatWizard(models.TransientModel):
         else:
             return self.production_default_location_id
 
+    def _get_min_qty(self, product):
+        if product.seller_ids:
+            return product.seller_ids[0].min_qty
+        return 0
+
     def get_mtsskus_file(self):
         now = self.datetime_localized(fields.Datetime.now(self))
         year, month, day = now.strftime("%Y-%m-%d").split("-")
@@ -199,7 +204,7 @@ class OneBeatWizard(models.TransientModel):
                 "Throughput": max(
                     buffer.product_id.list_price - buffer.product_id.standard_price, 0
                 ),
-                # 'Minimo Reabastecimiento': None,
+                "Minimo Reabastecimiento": self._get_min_qty(buffer.product_id),
                 "Unidad de Medida": clean(buffer.product_id.uom_id.name),
                 "Reported Year": year,
                 "Reported Month": month,
@@ -221,7 +226,7 @@ class OneBeatWizard(models.TransientModel):
             "Precio unitario",
             "TVC",
             "Throughput",
-            # 'Minimo Reabastecimiento',
+            "Minimo Reabastecimiento",
             "Unidad de Medida",
             "Reported Year",
             "Reported Month",

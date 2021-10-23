@@ -5,6 +5,7 @@
     "license": "LGPL-3",
     "depends": [
         "mrp",
+        "purchase",
         "stock",
     ],
     "data": [
