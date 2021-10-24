@@ -373,6 +373,20 @@ class OneBeatWizard(models.TransientModel):
             ]
         )
 
+        on_hand_lines = self.env["stock.quant"].read_group(
+            domain=[
+                ("location_id.onebeat_ignore", "=", False),
+                ("location_id.usage", "=", "internal"),
+            ],
+            fields=["product_id", "location_id", "quantity"],
+            groupby=["product_id", "location_id"],
+            lazy=False,
+        )
+        on_hand_map = {
+            (line["product_id"][0], line["location_id"][0]): line["quantity"]
+            for line in on_hand_lines
+        }
+
         on_transit_lines = self.env["stock.move.line"].read_group(
             domain=[
                 ("state", "in", ["waiting", "assigned"]),
@@ -396,7 +410,7 @@ class OneBeatWizard(models.TransientModel):
                 "Stock Location Name": clean(self._get_location_name(location)),
                 "SKU Name": clean(product.default_code),
                 "SKU Description": clean(product.name),
-                "Inventory At Hand": product.virtual_available,
+                "Inventory At Hand": on_hand_map.get((product.id, location.id), 0),
                 "Inventory On The Way": on_transit_map.get((product.id, location.id), 0),
                 "Reported Year": year,
                 "Reported Month": month,
