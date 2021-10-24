@@ -460,9 +460,8 @@ class OneBeatWizard(models.TransientModel):
         return ftp
 
     def _send_to_sftp(self, ftp, location, file):
-        if location:
-            ftp.chdir(location)
-        ftp.putfo(BytesIO(file[1]), file[0])
+        location = location + "/" if location else ""
+        ftp.putfo(BytesIO(file[1]), location + file[0])
 
     def _send_to_ftp(
         self,
@@ -490,9 +489,9 @@ class OneBeatWizard(models.TransientModel):
         ftp = self.get_ftp_connector()
         ftp_send = self._send_to_sftp if isinstance(ftp, pysftp.Connection) else self._send_to_ftp
         for file in files:
-            if not file:
+            if file[0] is None:
                 continue
-            ftp_send(ftp, file)
+            ftp_send(ftp, location, file)
         ftp.close()
 
     def _get_location_name(self, location):
