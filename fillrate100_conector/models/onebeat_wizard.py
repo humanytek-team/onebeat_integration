@@ -90,13 +90,19 @@ class OneBeatWizard(models.TransientModel):
         fname, data = super(OneBeatWizard, self).get_mtsskus_file()
         if self.fillrate100_format or not self.ids:
             data = self.data_to_fillrate(self.mtksskus_fillrate_parser(), data)
+            fname = f"input_{fname}"
         return fname, data
 
     def get_transactions_file(self, start=None, stop=None):
         fname, data = super(OneBeatWizard, self).get_transactions_file(start, stop)
         if self.fillrate100_format or not self.ids:
-            data = self.data_to_fillrate(self.transactions_fillrate_parser(), data)
-            fname = f"input_{fname}"
+            return None, b""
+        return fname, data
+
+    def get_stocklocations_file(self):
+        fname, data = super(OneBeatWizard, self).get_stocklocations_file()
+        if self.fillrate100_format or not self.ids:
+            return None, b""
         return fname, data
 
     def get_status_file(self):

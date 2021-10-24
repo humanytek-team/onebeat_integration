@@ -452,37 +452,20 @@ class OneBeatWizard(models.TransientModel):
         ftp.login(username, password)
         return ftp
 
-    def _send_to_sftp(
-        self,
-        ftp,
-        location,
-        stocklocations,
-        mtsskus,
-        transactions,
-        status,
-    ):
+    def _send_to_sftp(self, ftp, location, file):
         if location:
             ftp.chdir(location)
-        ftp.putfo(BytesIO(stocklocations[1]), stocklocations[0])
-        ftp.putfo(BytesIO(mtsskus[1]), mtsskus[0])
-        ftp.putfo(BytesIO(transactions[1]), transactions[0])
-        ftp.putfo(BytesIO(status[1]), status[0])
+        ftp.putfo(BytesIO(file[1]), file[0])
 
     def _send_to_ftp(
         self,
         ftp,
         location,
-        stocklocations,
-        mtsskus,
-        transactions,
-        status,
+        file,
     ):
         if location:
             ftp.cwd(location)
-        ftp.storbinary("STOR " + stocklocations[0], BytesIO(stocklocations[1]))
-        ftp.storbinary("STOR " + mtsskus[0], BytesIO(mtsskus[1]))
-        ftp.storbinary("STOR " + transactions[0], BytesIO(transactions[1]))
-        ftp.storbinary("STOR " + status[0], BytesIO(status[1]))
+        ftp.storbinary("STOR " + file[0], BytesIO(file[1]))
 
     def send_to_ftp(self, start=None, stop=None, location=None):
         now = self.datetime_localized(fields.Datetime.now(self))
@@ -490,21 +473,19 @@ class OneBeatWizard(models.TransientModel):
         stop = str(stop or start + timedelta(days=1))
         start = str(start)
 
-        stocklocations = self.get_stocklocations_file()
-        mtsskus = self.get_mtsskus_file()
-        transactions = self.get_transactions_file(start, stop)
-        status = self.get_status_file()
+        files = (
+            self.get_stocklocations_file(),
+            self.get_mtsskus_file(),
+            self.get_transactions_file(start, stop),
+            self.get_status_file(),
+        )
 
         ftp = self.get_ftp_connector()
         ftp_send = self._send_to_sftp if isinstance(ftp, pysftp.Connection) else self._send_to_ftp
-        ftp_send(
-            ftp,
-            location,
-            stocklocations,
-            mtsskus,
-            transactions,
-            status,
-        )
+        for file in files:
+            if not file:
+                continue
+            ftp_send(ftp, file)
         ftp.close()
 
     def _get_location_name(self, location):
