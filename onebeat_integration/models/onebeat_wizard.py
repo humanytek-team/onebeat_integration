@@ -373,30 +373,23 @@ class OneBeatWizard(models.TransientModel):
             ]
         )
 
-        Lines = self.env["stock.move.line"].read_group(
+        on_transit_lines = self.env["stock.move.line"].read_group(
             domain=[
-                ("state", "not in", ["done", "draft", "cancel"]),
+                ("state", "in", ["waiting", "assigned"]),
                 ("location_id.onebeat_ignore", "=", False),
                 ("location_dest_id.onebeat_ignore", "=", False),
-                (
-                    "location_id.usage",
-                    "in",
-                    [
-                        "supplier",
-                    ],
-                ),
-                (
-                    "location_dest_id.usage",
-                    "in",
-                    [
-                        "internal",
-                    ],
-                ),
+                ("location_id.usage", "=", "supplier"),
+                ("location_dest_id.usage", "=", "internal"),
             ],
-            fields=["product_id", "product_uom_qty"],
-            groupby=["product_id"],
+            fields=["product_id", "location_dest_id", "product_uom_qty", "qty_done"],
+            groupby=["product_id", "location_dest_id"],
+            lazy=False,
         )
-        lines_dict = {line["product_id"][0]: line["product_uom_qty"] for line in Lines}
+        on_transit_map = {
+            (line["product_id"][0], line["location_dest_id"][0]): line["product_uom_qty"]
+            - line["qty_done"]
+            for line in on_transit_lines
+        }
 
         data = [
             {
@@ -404,7 +397,7 @@ class OneBeatWizard(models.TransientModel):
                 "SKU Name": clean(product.default_code),
                 "SKU Description": clean(product.name),
                 "Inventory At Hand": product.virtual_available,
-                "Inventory On The Way": lines_dict.get(product.id, 0),
+                "Inventory On The Way": on_transit_map.get((product.id, location.id), 0),
                 "Reported Year": year,
                 "Reported Month": month,
                 "Reported Day": day,
