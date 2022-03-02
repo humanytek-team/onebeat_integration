@@ -14,4 +14,9 @@
         # views
         "views/onebeat_wizard.xml",
     ],
+    "external_dependencies": {
+        "python": [
+            "pysftp",
+        ],
+    },
 }

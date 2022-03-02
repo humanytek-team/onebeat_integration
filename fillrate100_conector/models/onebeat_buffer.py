@@ -17,9 +17,11 @@ class OnebeatBuffer(models.Model):
             (buffer.product_id.default_code, buffer.location_id.name): buffer
             for buffer in actual_buffers
         }
-        updated_by_tuple = {(updated["sku"], updated["location"]): updated for updated in reader}
-        for tuple, buffer in updated_by_tuple.items():
+        updated_by_tuple = {
+            (updated["sku"], updated["location"]): updated["buffer"] for updated in reader
+        }
+        for tuple, buffer_size in updated_by_tuple.items():
             if tuple not in buffers_by_tuple:
                 _logger.warning(_("Missing info %s"), tuple)
                 continue
-            buffers_by_tuple[tuple].buffer = buffer
+            buffers_by_tuple[tuple].buffer_size = buffer_size
