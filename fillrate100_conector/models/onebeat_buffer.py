@@ -14,7 +14,7 @@ class OnebeatBuffer(models.Model):
         reader = csv.DictReader(content.splitlines(), delimiter=";")
         actual_buffers = self.search([("company_id", "=", company.id)])
         buffers_by_tuple = {
-            (buffer.product_id.default_code, buffer.location_id.name): buffer
+            (buffer.product_id.default_code, buffer.location_id.complete_name): buffer
             for buffer in actual_buffers
         }
         updated_by_tuple = {
