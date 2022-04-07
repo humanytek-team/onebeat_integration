@@ -21,9 +21,7 @@ class OnebeatBuffer(models.Model):
         required=True,
         index=True,
     )
-    buffer_size = fields.Float(
-        required=True,
-    )
+    buffer_size = fields.Float()
     replenishment_time = fields.Integer(
         required=True,
     )
