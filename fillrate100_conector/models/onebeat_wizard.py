@@ -34,7 +34,7 @@ class OneBeatWizard(models.TransientModel):
             ("origin", "Origin SL"),
             ("replenishment_time", "Replenishment Time"),
             ("day_to_replenish", ""),
-            ("buffer", "Buffer Size"),
+            # ("buffer", "Buffer Size"),
             ("unit_cost", "Precio unitario"),
             ("min_qty", "Minimo Reabastecimiento"),
             ("multiple", ""),
