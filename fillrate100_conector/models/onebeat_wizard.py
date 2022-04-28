@@ -75,9 +75,7 @@ class OneBeatWizard(models.TransientModel):
         )
 
     def get_old_line_value(self, line, old):
-        if callable(old):
-            return old(line)
-        return line.get(old, "")
+        return old(line) if callable(old) else line.get(old, "")
 
     def data_to_fillrate(self, parser, data):
         csv_file = bytes_to_csv(data)

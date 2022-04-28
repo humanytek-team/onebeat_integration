@@ -152,7 +152,7 @@ class OneBeatWizard(models.TransientModel):
             "Ubicación",
         ]
         return (
-            "STOCKLOCATIONS_{}_{}.csv".format(self.get_company_id(), now.strftime("%Y%m%d")),
+            f'STOCKLOCATIONS_{self.get_company_id()}_{now.strftime("%Y%m%d")}.csv',
             data_to_bytes(fieldnames, data),
         )
 
@@ -165,15 +165,10 @@ class OneBeatWizard(models.TransientModel):
     def get_product_origin_location(self, product):
         if product.seller_ids:
             return product.seller_ids[0].name.property_stock_supplier
-        if product.property_stock_production:
-            return product.property_stock_production
-        else:
-            return self.production_default_location_id
+        return product.property_stock_production or self.production_default_location_id
 
     def _get_min_qty(self, product):
-        if product.seller_ids:
-            return product.seller_ids[0].min_qty
-        return 0
+        return product.seller_ids[0].min_qty if product.seller_ids else 0
 
     def get_mtsskus_file(self):
         now = self.datetime_localized(fields.Datetime.now(self))
@@ -232,9 +227,8 @@ class OneBeatWizard(models.TransientModel):
             "Reported Month",
             "Reported Day",
         ]
-        return (
-            "MTSSKUS_{}_{}.csv".format(self.get_company_id(), now.strftime("%Y%m%d")),
-            data_to_bytes(fieldnames, data),
+        return f'MTSSKUS_{self.get_company_id()}_{now.strftime("%Y%m%d")}.csv', data_to_bytes(
+            fieldnames, data
         )
 
     @keep_wizard_open
@@ -346,9 +340,8 @@ class OneBeatWizard(models.TransientModel):
             "Shipping Month",
             "Shipping Day",
         ]
-        return (
-            "TRANSACTIONS_{}_{}.csv".format(self.get_company_id(), now.strftime("%Y%m%d")),
-            data_to_bytes(fieldnames, data),
+        return f'TRANSACTIONS_{self.get_company_id()}_{now.strftime("%Y%m%d")}.csv', data_to_bytes(
+            fieldnames, data
         )
 
     @keep_wizard_open
@@ -426,9 +419,8 @@ class OneBeatWizard(models.TransientModel):
             "Reported Month",
             "Reported Day",
         ]
-        return (
-            "STATUS_{}_{}.csv".format(self.get_company_id(), now.strftime("%Y%m%d")),
-            data_to_bytes(fieldnames, data),
+        return f'STATUS_{self.get_company_id()}_{now.strftime("%Y%m%d")}.csv', data_to_bytes(
+            fieldnames, data
         )
 
     @keep_wizard_open
@@ -442,9 +434,7 @@ class OneBeatWizard(models.TransientModel):
         port = self.env.company.ftp_port
         username = self.env.company.ftp_user
         password = self.env.company.ftp_passwd
-        ftp_tls = self.env.company.ftp_tls
-
-        if ftp_tls:
+        if ftp_tls := self.env.company.ftp_tls:
             cnopts = pysftp.CnOpts()
             cnopts.hostkeys = None
             return pysftp.Connection(
@@ -456,7 +446,7 @@ class OneBeatWizard(models.TransientModel):
         return ftp
 
     def _send_to_sftp(self, ftp, location, file):
-        location = location + "/" if location else ""
+        location = f"{location}/" if location else ""
         ftp.putfo(BytesIO(file[1]), location + file[0])
 
     def _send_to_ftp(
@@ -467,7 +457,7 @@ class OneBeatWizard(models.TransientModel):
     ):
         if location:
             ftp.cwd(location)
-        ftp.storbinary("STOR " + file[0], BytesIO(file[1]))
+        ftp.storbinary(f"STOR {file[0]}", BytesIO(file[1]))
 
     def send_to_ftp(self, start=None, stop=None, location=None):
         now = self.datetime_localized(fields.Datetime.now(self))
