@@ -388,8 +388,9 @@ class OneBeatWizard(models.TransientModel):
             lazy=False,
         )
         on_transit_map = {
-            (line["product_id"][0], line["location_dest_id"][0]): line["product_uom_qty"]
-            - line["qty_done"]
+            (line["product_id"][0], line["location_dest_id"][0]): abs(
+                line["product_uom_qty"] - line["qty_done"]
+            )
             for line in on_transit_lines
         }
 
