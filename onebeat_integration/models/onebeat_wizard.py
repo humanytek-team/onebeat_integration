@@ -375,13 +375,12 @@ class OneBeatWizard(models.TransientModel):
             (line["product_id"][0], line["location_id"][0]): line["quantity"]
             for line in on_hand_lines
         }
-
         on_transit_lines = self.env["stock.move.line"].read_group(
             domain=[
-                ("state", "in", ["waiting", "assigned"]),
+                ("state", "=", "assigned"),
                 ("location_id.onebeat_ignore", "=", False),
                 ("location_dest_id.onebeat_ignore", "=", False),
-                ("location_id.usage", "=", "supplier"),
+                ("location_id.usage", "in", ("supplier", "transit")),
                 ("location_dest_id.usage", "=", "internal"),
             ],
             fields=["product_id", "location_dest_id", "product_uom_qty", "qty_done"],
