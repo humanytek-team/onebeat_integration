@@ -32,7 +32,7 @@ class OneBeatWizard(models.TransientModel):
             ("location", "Stock Location Name"),
             ("description", "SKU Description"),
             # ("origin", "Origin SL"),
-            ("replenishment_time", "Replenishment Time"),
+            # ("replenishment_time", "Replenishment Time"),
             # ("day_to_replenish", ""),
             # ("buffer", "Buffer Size"),
             ("unit_cost", "Precio unitario"),
