@@ -35,9 +35,9 @@ class OneBeatWizard(models.TransientModel):
             # ("replenishment_time", "Replenishment Time"),
             # ("day_to_replenish", ""),
             # ("buffer", "Buffer Size"),
-            ("unit_cost", "Precio unitario"),
-            ("min_qty", "Minimo Reabastecimiento"),
-            ("multiple", ""),
+            ("unit_cost", "TVC"),
+            # ("min_qty", "Minimo Reabastecimiento"),
+            # ("multiple", ""),
         )
 
     def _get_fillrate_name(self, line):
