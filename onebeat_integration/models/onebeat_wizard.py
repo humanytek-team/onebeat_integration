@@ -377,7 +377,7 @@ class OneBeatWizard(models.TransientModel):
         }
         on_transit_lines = self.env["stock.move.line"].read_group(
             domain=[
-                ("state", "=", "assigned"),
+                ("state", "in", ("confirmed", "partially_available", "assigned")),
                 ("location_id.onebeat_ignore", "=", False),
                 ("location_dest_id.onebeat_ignore", "=", False),
                 ("location_id.usage", "in", ("supplier", "transit")),
