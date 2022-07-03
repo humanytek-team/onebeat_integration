@@ -434,7 +434,8 @@ class OneBeatWizard(models.TransientModel):
         port = self.env.company.ftp_port
         username = self.env.company.ftp_user
         password = self.env.company.ftp_passwd
-        if ftp_tls := self.env.company.ftp_tls:
+        ftp_tls = self.env.company.ftp_tls
+        if ftp_tls:
             cnopts = pysftp.CnOpts()
             cnopts.hostkeys = None
             return pysftp.Connection(
@@ -464,6 +465,7 @@ class OneBeatWizard(models.TransientModel):
         start = start or now.replace(hour=0, minute=0, second=0)
         stop = str(stop or start + timedelta(days=1))
         start = str(start)
+        self.fillrate100_format = True
 
         files = (
             self.get_stocklocations_file(),
