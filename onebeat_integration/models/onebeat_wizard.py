@@ -188,7 +188,7 @@ class OneBeatWizard(models.TransientModel):
                 "Stock Location Name": clean(self._get_location_name(buffer.location_id)),
                 "Origin SL": clean(self.get_product_origin_location(buffer.product_id).name),
                 "SKU Name": clean(buffer.product_id.default_code),
-                "SKU Description": clean(buffer.product_id.name),
+                "SKU Description": clean(buffer.product_id.display_name),
                 "Buffer Size": buffer.buffer_size,
                 "Replenishment Time": buffer.replenishment_time,
                 "Inventory at Site": 0,  # TODO
@@ -465,7 +465,6 @@ class OneBeatWizard(models.TransientModel):
         start = start or now.replace(hour=0, minute=0, second=0)
         stop = str(stop or start + timedelta(days=1))
         start = str(start)
-        self.fillrate100_format = True
 
         files = (
             self.get_stocklocations_file(),
