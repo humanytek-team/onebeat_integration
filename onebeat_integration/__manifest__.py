@@ -7,6 +7,8 @@
         "mrp",
         "purchase",
         "stock",
+        # Custom
+        "ftp_save",
     ],
     "data": [
         # security

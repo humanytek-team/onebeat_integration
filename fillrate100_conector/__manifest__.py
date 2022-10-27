@@ -5,6 +5,8 @@
     "license": "LGPL-3",
     "depends": [
         "onebeat_integration",
+        # Custom
+        "ftp_save",
     ],
     "data": [
         # security
@@ -14,9 +16,4 @@
         # views
         "views/onebeat_wizard.xml",
     ],
-    "external_dependencies": {
-        "python": [
-            "pysftp",
-        ],
-    },
 }

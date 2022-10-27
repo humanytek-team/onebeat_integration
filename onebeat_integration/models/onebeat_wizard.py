@@ -1,16 +1,13 @@
 import base64
 import csv
 import logging
+import os
 from datetime import datetime, timedelta
-from ftplib import FTP
-from io import BytesIO, StringIO
-from typing import Union
+from io import StringIO
 
-import pysftp
 import pytz
-
-from odoo import fields, models
-from odoo.exceptions import ValidationError
+from odoo import _, fields, models
+from odoo.exceptions import UserError, ValidationError
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
 _logger = logging.getLogger(__name__)
@@ -429,38 +426,13 @@ class OneBeatWizard(models.TransientModel):
         self.status_file_fname = fname
         self.status_file = base64.b64encode(data)
 
-    def get_ftp_connector(self) -> Union[FTP, pysftp.Connection]:
-        host = self.env.company.ftp_host
-        port = self.env.company.ftp_port
-        username = self.env.company.ftp_user
-        password = self.env.company.ftp_passwd
-        ftp_tls = self.env.company.ftp_tls
-        if ftp_tls:
-            cnopts = pysftp.CnOpts()
-            cnopts.hostkeys = None
-            return pysftp.Connection(
-                host=host, username=username, password=password, cnopts=cnopts, port=port
-            )
-        ftp = FTP()
-        ftp.connect(host, port)
-        ftp.login(username, password)
-        return ftp
+    def get_ftp_server(self):
+        company = self.env.company
+        if not company.onebeat_ftp_server_id:
+            raise UserError(_("No FTP server configured"))
+        return company.onebeat_ftp_server_id
 
-    def _send_to_sftp(self, ftp, location, file):
-        location = f"{location}/" if location else ""
-        ftp.putfo(BytesIO(file[1]), location + file[0])
-
-    def _send_to_ftp(
-        self,
-        ftp,
-        location,
-        file,
-    ):
-        if location:
-            ftp.cwd(location)
-        ftp.storbinary(f"STOR {file[0]}", BytesIO(file[1]))
-
-    def send_to_ftp(self, start=None, stop=None, location=None):
+    def send_to_ftp(self, start=None, stop=None, location=""):
         now = self.datetime_localized(fields.Datetime.now(self))
         start = start or now.replace(hour=0, minute=0, second=0)
         stop = str(stop or start + timedelta(days=1))
@@ -473,13 +445,12 @@ class OneBeatWizard(models.TransientModel):
             self.get_status_file(),
         )
 
-        ftp = self.get_ftp_connector()
-        ftp_send = self._send_to_sftp if isinstance(ftp, pysftp.Connection) else self._send_to_ftp
+        ftp_server = self.get_ftp_server()
         for file in files:
             if file[0] is None:
                 continue
-            ftp_send(ftp, location, file)
-        ftp.close()
+            full_path = os.path.join(location, file[0])
+            ftp_server.upload(full_path, file[1])
 
     def _get_location_name(self, location):
         return location.complete_name
