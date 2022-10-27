@@ -1,12 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo noupdate="1">
-    <record id="onebeat_update_buffers_cron" model="ir.cron">
-        <field name="name">OneBeat: Update Buffers from FTP server</field>
-        <field name="model_id" ref="model_onebeat_wizard"/>
-        <field name="state">code</field>
-        <field name="code">model.update_buffers_from_ftp()</field>
-        <field name="interval_number">1</field>
-        <field name="interval_type">days</field>
-        <field name="numbercall">-1</field>
-    </record>
+  <record id="onebeat_update_buffers_cron" model="ir.cron">
+    <field name="name">OneBeat: Update Buffers from FTP server</field>
+    <field name="model_id" ref="model_onebeat_wizard"/>
+    <field name="state">code</field>
+    <field name="code">model.update_buffers_from_ftp()</field>
+    <field name="interval_number">1</field>
+    <field name="interval_type">days</field>
+    <field name="numbercall">-1</field>
+  </record>
+  <record id="onebeat_purchase_order_cron" model="ir.cron">
+    <field name="name">OneBeat: Create Purchase Orders from FTP server</field>
+    <field name="model_id" ref="model_onebeat_replenisher"/>
+    <field name="state">code</field>
+    <field name="code">model.replenish()</field>
+    <field name="interval_number">1</field>
+    <field name="interval_type">days</field>
+    <field name="numbercall">-1</field>
+  </record>
 </odoo>

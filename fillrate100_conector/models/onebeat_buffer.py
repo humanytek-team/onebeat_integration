@@ -5,13 +5,15 @@ from odoo import _, models
 
 _logger = logging.getLogger(__name__)
 
+FILLRATE_CSV_DELIMITER = ";"
+
 
 class OnebeatBuffer(models.Model):
     _inherit = "onebeat.buffer"
 
     def update_buffers(self, content, company=None):
         company = company or self.env.company
-        reader = csv.DictReader(content.splitlines(), delimiter=";")
+        reader = csv.DictReader(content.splitlines(), delimiter=FILLRATE_CSV_DELIMITER)
         actual_buffers = self.search([("company_id", "=", company.id)])
         buffers_by_tuple = {
             (buffer.product_id.default_code, buffer.location_id.complete_name): buffer

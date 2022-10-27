@@ -6,12 +6,14 @@ from odoo.addons.onebeat_integration.models.onebeat_wizard import data_to_bytes
 
 BUFFER_FILE = "ftp/buffers_update.csv"
 
+FILLRATE_CSV_DELIMITER = ";"
+
 
 def bytes_to_csv(bytes: bytes):
     """Convert byte string to CSV"""
 
     lines = bytes.decode("utf-8").splitlines()
-    return csv.DictReader(lines, delimiter=";")
+    return csv.DictReader(lines, delimiter=FILLRATE_CSV_DELIMITER)
 
 
 class OneBeatWizard(models.TransientModel):

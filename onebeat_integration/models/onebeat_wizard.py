@@ -11,11 +11,12 @@ from odoo.exceptions import UserError, ValidationError
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
 _logger = logging.getLogger(__name__)
+FILLRATE_CSV_DELIMITER = ";"
 
 
 def data_to_bytes(fieldnames, data):
     writer_file = StringIO()
-    writer = csv.DictWriter(writer_file, fieldnames=fieldnames, delimiter=";")
+    writer = csv.DictWriter(writer_file, fieldnames=fieldnames, delimiter=FILLRATE_CSV_DELIMITER)
     writer.writeheader()
     writer.writerows(data)
     return writer_file.getvalue().encode("utf-8")

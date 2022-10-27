@@ -4,8 +4,10 @@
     "author": "Humanytek",
     "license": "LGPL-3",
     "depends": [
-        "onebeat_integration",
+        "purchase",
         # Custom
+        "onebeat_integration",
+        # Custom external
         "ftp_save",
     ],
     "data": [
