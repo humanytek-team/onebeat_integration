@@ -18,27 +18,37 @@ class OnebeatReplenisher(models.TransientModel):
     _name = "onebeat.replenisher"
     _description = "Onebeat Replenisher"
 
-    def _get_last_update_content(self):
+    def _get_path_last_update_file(self):
         ftp_server = self.env.company.onebeat_ftp_server_id
         file_names = [f.split("/")[-1] for f in ftp_server.list(FILE_PATH)]
         file_names = [f for f in file_names if re.match(FILE_NAME_REGEX, f)]
         if not file_names:
-            return None
+            raise UserError("No se encontró el archivo para reponer")
         file_name = max(file_names)
-        full_path = os.path.join(FILE_PATH, file_name)
-        return ftp_server.download(full_path).decode("UTF-8")
+        return os.path.join(FILE_PATH, file_name)
+
+    def _get_last_update_content(self):
+        ftp_server = self.env.company.onebeat_ftp_server_id
+        path = self._get_path_last_update_file()
+        return ftp_server.download(path).decode("UTF-8")
+
+    def _delete_last_update_file(self):
+        ftp_server = self.env.company.onebeat_ftp_server_id
+        path = self._get_path_last_update_file()
+        ftp_server.delete(path)
 
     def replenish(self):
         last_update_content = self._get_last_update_content()
         if not last_update_content:
             raise UserError("No se encontró el archivo para reponer")
         self._replenish(last_update_content)
+        self._delete_last_update_file()
 
     def _get_supplier_info_by_sku(self, products):
         return {
             product.default_code: product.seller_ids[0]
             for product in products
-            if product.seller_ids
+            if product.seller_ids and product.purchase_ok
         }
 
     def _get_purchase_lines_by_supplier(self, rows):
@@ -77,7 +87,7 @@ class OnebeatReplenisher(models.TransientModel):
                 {
                     "partner_id": supplier.id,
                     "order_line": [(0, 0, line) for line in lines],
-                    "origin": "Fillrate",
+                    "origin": "Fillrate100",
                     "date_planned": None,
                 }
             )
