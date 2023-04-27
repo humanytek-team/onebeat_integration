@@ -67,7 +67,6 @@ class OneBeatWizard(models.TransientModel):
             ("name", self._get_fillrate_name),
             ("sku", "SKU Name"),
             ("location", "Stock Location Name"),
-            ("description", ""),
             ("onhand", "Inventory At Hand"),
             ("transit", "Inventory On The Way"),
         )
