@@ -434,6 +434,7 @@ class OneBeatWizard(models.TransientModel):
         return company.onebeat_ftp_server_id
 
     def send_to_ftp(self, start=None, stop=None, location=""):
+        self = self.with_context(lang=self.env.user.lang)
         now = self.datetime_localized(fields.Datetime.now(self))
         start = start or now.replace(hour=0, minute=0, second=0)
         stop = str(stop or start + timedelta(days=1))
