@@ -89,15 +89,15 @@ class OneBeatWizard(models.TransientModel):
         return fname, data
 
     def get_transactions_file(self, start=None, stop=None):
-        fname, data = super(OneBeatWizard, self).get_transactions_file(start, stop)
         if self.fillrate100_format or not self.ids:
             return None, b""
+        fname, data = super(OneBeatWizard, self).get_transactions_file(start, stop)
         return fname, data
 
     def get_stocklocations_file(self):
-        fname, data = super(OneBeatWizard, self).get_stocklocations_file()
         if self.fillrate100_format or not self.ids:
             return None, b""
+        fname, data = super(OneBeatWizard, self).get_stocklocations_file()
         return fname, data
 
     def get_status_file(self):

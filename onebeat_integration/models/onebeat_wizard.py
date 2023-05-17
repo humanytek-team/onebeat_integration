@@ -172,7 +172,9 @@ class OneBeatWizard(models.TransientModel):
         now = self.datetime_localized(fields.Datetime.now(self))
         year, month, day = now.strftime("%Y-%m-%d").split("-")
 
-        Locations = self.env["stock.location"].search([("usage", "=", "internal")])
+        Locations = self.env["stock.location"].search(
+            [("usage", "=", "internal"), ("onebeat_ignore", "=", False)]
+        )
         Products = self.env["product.product"].search(
             [
                 ("type", "!=", "service"),
@@ -248,7 +250,7 @@ class OneBeatWizard(models.TransientModel):
                 "OUT" if move.location_id.usage == "internal" else "IN",
                 date,
             )
-            grouped[key] = grouped.get(key, 0) + move.quantity_done
+            grouped[key] = grouped.get(key, 0) or 0 + move.quantity_done
         return grouped
 
     def get_transactions_file(self, start=None, stop=None):
@@ -352,7 +354,9 @@ class OneBeatWizard(models.TransientModel):
         now = self.datetime_localized(fields.Datetime.now(self))
         year, month, day = now.strftime("%Y-%m-%d").split("-")
 
-        Locations = self.env["stock.location"].search([("usage", "=", "internal")])
+        Locations = self.env["stock.location"].search(
+            [("usage", "=", "internal"), ("onebeat_ignore", "=", False)]
+        )
         Products = self.env["product.product"].search(
             [
                 ("type", "!=", "service"),
@@ -397,8 +401,8 @@ class OneBeatWizard(models.TransientModel):
                 "Stock Location Name": clean(self._get_location_name(location)),
                 "SKU Name": clean(product.default_code),
                 "SKU Description": clean(product.name),
-                "Inventory At Hand": on_hand_map.get((product.id, location.id), 0),
-                "Inventory On The Way": on_transit_map.get((product.id, location.id), 0),
+                "Inventory At Hand": on_hand_map.get((product.id, location.id), 0) or 0,
+                "Inventory On The Way": on_transit_map.get((product.id, location.id), 0) or 0,
                 "Reported Year": year,
                 "Reported Month": month,
                 "Reported Day": day,
