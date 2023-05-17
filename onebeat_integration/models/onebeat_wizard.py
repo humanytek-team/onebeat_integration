@@ -458,5 +458,27 @@ class OneBeatWizard(models.TransientModel):
             full_path = os.path.join(location, file[0])
             ftp_server.upload(full_path, file[1])
 
+    def send_to_ftp_mtsskus(self, start=None, stop=None, location=""):
+        self = self.with_context(lang=self.env.user.lang)
+
+        file = self.get_mtsskus_file()
+
+        ftp_server = self.get_ftp_server()
+        if file[0] is None:
+            return
+        full_path = os.path.join(location, file[0])
+        ftp_server.upload(full_path, file[1])
+
+    def send_to_ftp_status(self, start=None, stop=None, location=""):
+        self = self.with_context(lang=self.env.user.lang)
+
+        file = self.get_status_file()
+
+        ftp_server = self.get_ftp_server()
+        if file[0] is None:
+            return
+        full_path = os.path.join(location, file[0])
+        ftp_server.upload(full_path, file[1])
+
     def _get_location_name(self, location):
         return location.complete_name
