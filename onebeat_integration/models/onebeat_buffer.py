@@ -48,7 +48,7 @@ class OnebeatBuffer(models.Model):
             company = self.env.company
         buffers = self.search(
             [
-                ("company_id", "=", company.id),
+                # ("company_id", "=", company.id),
                 ("product_id", "in", products.ids),
                 ("location_id", "in", locations.ids),
             ]
