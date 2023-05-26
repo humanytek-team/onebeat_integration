@@ -20,12 +20,12 @@ class OnebeatReplenisher(models.TransientModel):
 
     def _get_path_last_update_file(self):
         ftp_server = self.env.company.onebeat_ftp_server_id
-        file_names = [f.split("/")[-1] for f in ftp_server.list(FILE_PATH)]
+        file_names = [f.split("/")[-1] for f in ftp_server.list(".")]
         file_names = [f for f in file_names if re.match(FILE_NAME_REGEX, f)]
         if not file_names:
             raise UserError("No se encontró el archivo para reponer")
         file_name = max(file_names)
-        return os.path.join(FILE_PATH, file_name)
+        return os.path.join(".", file_name)
 
     def _get_last_update_content(self):
         ftp_server = self.env.company.onebeat_ftp_server_id
