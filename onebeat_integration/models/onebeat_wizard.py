@@ -162,7 +162,7 @@ class OneBeatWizard(models.TransientModel):
 
     def get_product_origin_location(self, product):
         if product.seller_ids:
-            return product.seller_ids[0].name.property_stock_supplier
+            return product.seller_ids[0].partner_id.property_stock_supplier
         return product.property_stock_production or self.production_default_location_id
 
     def _get_min_qty(self, product):
