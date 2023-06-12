@@ -25,7 +25,7 @@ class OnebeatReplenisher(models.TransientModel):
         if not file_names:
             raise UserError("No se encontró el archivo para reponer")
         file_name = max(file_names)
-        return os.path.join(self.env.company.onebeat_ftp_server_id, file_name)
+        return file_name
 
     def _get_last_update_content(self):
         ftp_server = self.env.company.onebeat_ftp_server_id
