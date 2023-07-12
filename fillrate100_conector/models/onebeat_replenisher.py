@@ -1,11 +1,13 @@
 import csv
-import os
+import logging
 import re
 from collections import defaultdict
 from typing import Dict, Iterable
 
 from odoo import fields, models
 from odoo.exceptions import UserError
+
+_logger = logging.getLogger(__name__)
 
 FILE_PATH = r"ftp"
 FILE_NAME_REGEX = r"sku_ro_.+\.csv"
@@ -75,6 +77,7 @@ class OnebeatReplenisher(models.TransientModel):
             purchase_lines_by_supplier[partner].append(
                 self._gen_purchase_line_from_supplier_info_and_row(supplier_info, row)
             )
+        _logger.info(purchase_lines_by_supplier)
         return purchase_lines_by_supplier
 
     def _replenish_rows(self, rows: Iterable[Dict[str, str]]) -> None:
