@@ -2,6 +2,7 @@ import base64
 import csv
 import logging
 import os
+from collections import defaultdict
 from datetime import datetime, timedelta
 from io import StringIO
 
@@ -395,6 +396,31 @@ class OneBeatWizard(models.TransientModel):
             )
             for line in on_transit_lines
         }
+        all_location_ids = [t[1] for t in (on_transit_map.keys() | on_hand_map.keys())]
+        all_locations = self.env["stock.location"].browse(all_location_ids)
+        child_to_parent = {}
+        for location in all_locations:
+            current_location = location
+            while (
+                current_location.location_id
+                and current_location.location_id.id in all_location_ids
+                and not current_location.is_direct_from_warehouse
+            ):
+                current_location = current_location.location_id
+            if current_location.id == location.id:
+                continue
+            child_to_parent[location.id] = current_location.id
+
+        # Summarize by parent location
+        on_hand_map_sum = defaultdict(float)
+        for key, value in on_hand_map.items():
+            parent = child_to_parent.get(key[1], key[1])
+            on_hand_map_sum[(key[0], parent)] += value
+
+        on_transit_map_sum = defaultdict(float)
+        for key, value in on_transit_map.items():
+            parent = child_to_parent.get(key[1], key[1])
+            on_transit_map_sum[(key[0], parent)] += value
 
         data = [
             {
