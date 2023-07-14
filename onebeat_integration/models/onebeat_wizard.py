@@ -396,8 +396,8 @@ class OneBeatWizard(models.TransientModel):
             )
             for line in on_transit_lines
         }
-        all_location_ids = [t[1] for t in (on_transit_map.keys() | on_hand_map.keys())]
-        all_locations = self.env["stock.location"].browse(all_location_ids)
+        all_location_ids = {t[1] for t in (on_transit_map.keys() | on_hand_map.keys())}
+        all_locations = self.env["stock.location"].browse(list(all_location_ids))
         child_to_parent = {}
         for location in all_locations:
             current_location = location
@@ -427,13 +427,14 @@ class OneBeatWizard(models.TransientModel):
                 "Stock Location Name": clean(self._get_location_name(location)),
                 "SKU Name": clean(product.default_code),
                 "SKU Description": clean(product.name),
-                "Inventory At Hand": on_hand_map.get((product.id, location.id), 0) or 0,
-                "Inventory On The Way": on_transit_map.get((product.id, location.id), 0) or 0,
+                "Inventory At Hand": on_hand_map_sum.get((product.id, location.id), 0) or 0,
+                "Inventory On The Way": on_transit_map_sum.get((product.id, location.id), 0) or 0,
                 "Reported Year": year,
                 "Reported Month": month,
                 "Reported Day": day,
             }
-            for location in Locations
+            for location in all_locations
+            if location.is_direct_from_warehouse
             for product in Products
         ]
 
