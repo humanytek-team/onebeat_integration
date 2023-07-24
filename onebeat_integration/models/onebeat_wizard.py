@@ -176,6 +176,7 @@ class OneBeatWizard(models.TransientModel):
         Locations = self.env["stock.location"].search(
             [("usage", "=", "internal"), ("onebeat_ignore", "=", False)]
         )
+        locations = self.env["stock.location"].browse(self._children_to_parents(Locations).keys())
         Products = self.env["product.product"].search(
             [
                 ("type", "!=", "service"),
@@ -183,7 +184,7 @@ class OneBeatWizard(models.TransientModel):
             ]
         )
         Buffers = self.env["onebeat.buffer"]
-        buffers = Buffers.generate_all_combinations(Products, Locations)
+        buffers = Buffers.generate_all_combinations(Products, locations)
         data = [
             {
                 "Stock Location Name": clean(self._get_location_name(buffer.location_id)),
@@ -351,13 +352,25 @@ class OneBeatWizard(models.TransientModel):
         self.transactions_file_fname = fname
         self.transactions_file = base64.b64encode(data)
 
+    def _children_to_parents(self, locations):
+        child_to_parent = {}
+        for location in locations:
+            current_location = location
+            while (
+                current_location.location_id
+                and current_location.location_id in locations
+                and not current_location.is_direct_from_warehouse
+            ):
+                current_location = current_location.location_id
+            if current_location.id == location.id:
+                continue
+            child_to_parent[location.id] = current_location.id
+        return child_to_parent
+
     def get_status_file(self):
         now = self.datetime_localized(fields.Datetime.now(self))
         year, month, day = now.strftime("%Y-%m-%d").split("-")
 
-        Locations = self.env["stock.location"].search(
-            [("usage", "=", "internal"), ("onebeat_ignore", "=", False)]
-        )
         Products = self.env["product.product"].search(
             [
                 ("type", "!=", "service"),
@@ -398,18 +411,7 @@ class OneBeatWizard(models.TransientModel):
         }
         all_location_ids = {t[1] for t in (on_transit_map.keys() | on_hand_map.keys())}
         all_locations = self.env["stock.location"].browse(list(all_location_ids))
-        child_to_parent = {}
-        for location in all_locations:
-            current_location = location
-            while (
-                current_location.location_id
-                and current_location.location_id.id in all_location_ids
-                and not current_location.is_direct_from_warehouse
-            ):
-                current_location = current_location.location_id
-            if current_location.id == location.id:
-                continue
-            child_to_parent[location.id] = current_location.id
+        child_to_parent = self._children_to_parents(all_locations)
 
         # Summarize by parent location
         on_hand_map_sum = defaultdict(float)
