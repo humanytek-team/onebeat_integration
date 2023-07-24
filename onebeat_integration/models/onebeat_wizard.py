@@ -2,6 +2,7 @@ import base64
 import csv
 import logging
 import os
+from collections import defaultdict
 from datetime import datetime, timedelta
 from io import StringIO
 
@@ -175,6 +176,9 @@ class OneBeatWizard(models.TransientModel):
         Locations = self.env["stock.location"].search(
             [("usage", "=", "internal"), ("onebeat_ignore", "=", False)]
         )
+        locations = self.env["stock.location"].browse(
+            list(set(self._children_to_parents(Locations).values()))
+        )
         Products = self.env["product.product"].search(
             [
                 ("type", "!=", "service"),
@@ -182,7 +186,7 @@ class OneBeatWizard(models.TransientModel):
             ]
         )
         Buffers = self.env["onebeat.buffer"]
-        buffers = Buffers.generate_all_combinations(Products, Locations)
+        buffers = Buffers.generate_all_combinations(Products, locations)
         data = [
             {
                 "Stock Location Name": clean(self._get_location_name(buffer.location_id)),
@@ -350,13 +354,25 @@ class OneBeatWizard(models.TransientModel):
         self.transactions_file_fname = fname
         self.transactions_file = base64.b64encode(data)
 
+    def _children_to_parents(self, locations):
+        child_to_parent = {}
+        for location in locations:
+            current_location = location
+            while (
+                current_location.location_id
+                and current_location.location_id in locations
+                and not current_location.is_direct_from_warehouse
+            ):
+                current_location = current_location.location_id
+            if current_location.id == location.id:
+                continue
+            child_to_parent[location.id] = current_location.id
+        return child_to_parent
+
     def get_status_file(self):
         now = self.datetime_localized(fields.Datetime.now(self))
         year, month, day = now.strftime("%Y-%m-%d").split("-")
 
-        Locations = self.env["stock.location"].search(
-            [("usage", "=", "internal"), ("onebeat_ignore", "=", False)]
-        )
         Products = self.env["product.product"].search(
             [
                 ("type", "!=", "service"),
@@ -395,19 +411,34 @@ class OneBeatWizard(models.TransientModel):
             )
             for line in on_transit_lines
         }
+        all_location_ids = {t[1] for t in (on_transit_map.keys() | on_hand_map.keys())}
+        all_locations = self.env["stock.location"].browse(list(all_location_ids))
+        child_to_parent = self._children_to_parents(all_locations)
+
+        # Summarize by parent location
+        on_hand_map_sum = defaultdict(float)
+        for key, value in on_hand_map.items():
+            parent = child_to_parent.get(key[1], key[1])
+            on_hand_map_sum[(key[0], parent)] += value
+
+        on_transit_map_sum = defaultdict(float)
+        for key, value in on_transit_map.items():
+            parent = child_to_parent.get(key[1], key[1])
+            on_transit_map_sum[(key[0], parent)] += value
 
         data = [
             {
                 "Stock Location Name": clean(self._get_location_name(location)),
                 "SKU Name": clean(product.default_code),
                 "SKU Description": clean(product.name),
-                "Inventory At Hand": on_hand_map.get((product.id, location.id), 0) or 0,
-                "Inventory On The Way": on_transit_map.get((product.id, location.id), 0) or 0,
+                "Inventory At Hand": on_hand_map_sum.get((product.id, location.id), 0) or 0,
+                "Inventory On The Way": on_transit_map_sum.get((product.id, location.id), 0) or 0,
                 "Reported Year": year,
                 "Reported Month": month,
                 "Reported Day": day,
             }
-            for location in Locations
+            for location in all_locations
+            if location.is_direct_from_warehouse
             for product in Products
         ]
 
