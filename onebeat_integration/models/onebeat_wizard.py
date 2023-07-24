@@ -176,7 +176,9 @@ class OneBeatWizard(models.TransientModel):
         Locations = self.env["stock.location"].search(
             [("usage", "=", "internal"), ("onebeat_ignore", "=", False)]
         )
-        locations = self.env["stock.location"].browse(self._children_to_parents(Locations).keys())
+        locations = self.env["stock.location"].browse(
+            list(set(self._children_to_parents(Locations).values()))
+        )
         Products = self.env["product.product"].search(
             [
                 ("type", "!=", "service"),
