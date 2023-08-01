@@ -362,8 +362,8 @@ class OneBeatWizard(models.TransientModel):
                 and not current_location.is_direct_from_warehouse
             ):
                 current_location = current_location.location_id
-            if current_location.id == location.id:
-                continue
+            # if current_location.id == location.id:
+            #     continue
             child_to_parent[location.id] = current_location.id
         return child_to_parent
 
