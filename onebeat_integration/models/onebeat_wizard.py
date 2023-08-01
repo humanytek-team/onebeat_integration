@@ -173,9 +173,7 @@ class OneBeatWizard(models.TransientModel):
         now = self.datetime_localized(fields.Datetime.now(self))
         year, month, day = now.strftime("%Y-%m-%d").split("-")
 
-        Locations = self.env["stock.location"].search(
-            [("usage", "=", "internal"), ("onebeat_ignore", "=", False)]
-        )
+        Locations = self.env["stock.location"].search([("onebeat_ignore", "=", False)])
         locations = self.env["stock.location"].browse(
             list(set(self._children_to_parents(Locations).values()))
         )
