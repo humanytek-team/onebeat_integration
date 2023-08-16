@@ -173,9 +173,7 @@ class OneBeatWizard(models.TransientModel):
         now = self.datetime_localized(fields.Datetime.now(self))
         year, month, day = now.strftime("%Y-%m-%d").split("-")
 
-        Locations = self.env["stock.location"].search(
-            [("usage", "=", "internal"), ("onebeat_ignore", "=", False)]
-        )
+        Locations = self.env["stock.location"].search([("onebeat_ignore", "=", False)])
         locations = self.env["stock.location"].browse(
             list(set(self._children_to_parents(Locations).values()))
         )
@@ -364,7 +362,9 @@ class OneBeatWizard(models.TransientModel):
                 and not current_location.is_direct_from_warehouse
             ):
                 current_location = current_location.location_id
-            if current_location.id == location.id:
+            # if current_location.id == location.id:
+            #     continue
+            if not current_location.is_direct_from_warehouse:
                 continue
             child_to_parent[location.id] = current_location.id
         return child_to_parent
