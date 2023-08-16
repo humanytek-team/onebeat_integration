@@ -61,10 +61,12 @@ class OnebeatReplenisher(models.TransientModel):
         return self._gen_purchase_lines_from_supplier_info_by_sku(supplier_info_by_sku, rows)
 
     def _gen_purchase_line_from_supplier_info_and_row(self, supplier_info, row):
+        product = supplier_info.product_id or supplier_info.product_tmpl_id.product_variant_id
+        uom = product.uom_po_id or product.uom_id
         return {
-            "product_id": supplier_info.product_id.id
-            or supplier_info.product_tmpl_id.product_variant_id.id,
+            "product_id": product.id,
             "product_qty": row["qty_replenishment"],
+            "product_uom": uom.id,
         }
 
     def _gen_purchase_lines_from_supplier_info_by_sku(self, supplier_info_by_sku, rows):
