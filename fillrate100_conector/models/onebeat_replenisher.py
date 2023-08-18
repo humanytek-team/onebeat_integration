@@ -55,6 +55,7 @@ class OnebeatReplenisher(models.TransientModel):
                 _logger.warning(
                     f"Product {product.default_code} has no seller for company {company.name}"
                 )
+                continue
             res[product.default_code] = sellers[0]
         return res
 
