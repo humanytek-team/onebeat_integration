@@ -48,11 +48,15 @@ class OnebeatReplenisher(models.TransientModel):
 
     def _get_supplier_info_by_sku(self, products):
         company = self.env.company
-        return {
-            product.default_code: product.seller_ids.filtered(lambda s: s.company_id == company)[0]
-            for product in products
-            if product.seller_ids and product.purchase_ok
-        }
+        res = {}
+        for product in products:
+            sellers = product.seller_ids.filtered(lambda s: s.company_id == company)
+            if not sellers:
+                _logger.warning(
+                    f"Product {product.default_code} has no seller for company {company.name}"
+                )
+            res[product.default_code] = sellers[0]
+        return res
 
     def _get_purchase_lines_by_supplier(self, rows):
         skus = tuple(row["sku"] for row in rows)
