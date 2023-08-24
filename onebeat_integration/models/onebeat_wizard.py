@@ -433,7 +433,7 @@ class OneBeatWizard(models.TransientModel):
                 "SKU Description": clean(product.name),
                 "Inventory At Hand": on_hand_map_sum.get((product.id, location.id), 0) or 0
                 if not location.use_virtual_available
-                else product.with_context(location=location).virtual_available,
+                else product.with_context(location=location.id).virtual_available,
                 "Inventory On The Way": on_transit_map_sum.get((product.id, location.id), 0) or 0,
                 "Reported Year": year,
                 "Reported Month": month,
