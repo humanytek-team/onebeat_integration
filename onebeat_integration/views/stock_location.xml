@@ -7,6 +7,7 @@
         <field name="arch" type="xml">
             <field name="return_location" position="after">
                 <field name="onebeat_ignore"/>
+                <field name="use_virtual_available"/>
             </field>
         </field>
     </record>

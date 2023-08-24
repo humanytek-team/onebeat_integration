@@ -19,6 +19,9 @@ class StockLocation(models.Model):
         compute="_compute_onebeat_ignore_complete",
         store=True,
     )
+    use_virtual_available = fields.Boolean(
+        string="Use Virtual Available",
+    )
 
     @api.depends("warehouse_ids")
     def _compute_is_direct_from_warehouse(self):
