@@ -1,6 +1,6 @@
 {
     "name": "Fillrate100 Connector",
-    "version": "15.0.0.1.0",
+    "version": "16.0.0.1.0",
     "author": "Humanytek",
     "license": "LGPL-3",
     "depends": [

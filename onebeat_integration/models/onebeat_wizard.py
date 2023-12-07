@@ -163,7 +163,7 @@ class OneBeatWizard(models.TransientModel):
 
     def get_product_origin_location(self, product):
         if product.seller_ids:
-            return product.seller_ids[0].name.property_stock_supplier
+            return product.seller_ids[0].partner_id.property_stock_supplier
         return product.property_stock_production or self.production_default_location_id
 
     def _get_min_qty(self, product):
@@ -401,13 +401,13 @@ class OneBeatWizard(models.TransientModel):
                 ("location_id.usage", "in", ("supplier", "transit")),
                 ("location_dest_id.usage", "=", "internal"),
             ],
-            fields=["product_id", "location_dest_id", "product_uom_qty", "qty_done"],
+            fields=["product_id", "location_dest_id", "reserved_uom_qty", "qty_done"],
             groupby=["product_id", "location_dest_id"],
             lazy=False,
         )
         on_transit_map = {
             (line["product_id"][0], line["location_dest_id"][0]): abs(
-                line["product_uom_qty"] - line["qty_done"]
+                line["reserved_uom_qty"] - line["qty_done"]
             )
             for line in on_transit_lines
         }

@@ -81,7 +81,7 @@ class OnebeatReplenisher(models.TransientModel):
             supplier_info = supplier_info_by_sku.get(sku)
             if not supplier_info:
                 continue
-            partner = supplier_info.name
+            partner = supplier_info.partner_id
             purchase_lines_by_supplier[partner].append(
                 self._gen_purchase_line_from_supplier_info_and_row(supplier_info, row)
             )
