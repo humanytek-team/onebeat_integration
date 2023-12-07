@@ -1,11 +1,13 @@
 import csv
-import os
+import logging
 import re
 from collections import defaultdict
 from typing import Dict, Iterable
 
 from odoo import fields, models
 from odoo.exceptions import UserError
+
+_logger = logging.getLogger(__name__)
 
 FILE_PATH = r"ftp"
 FILE_NAME_REGEX = r"sku_ro_.+\.csv"
@@ -20,12 +22,12 @@ class OnebeatReplenisher(models.TransientModel):
 
     def _get_path_last_update_file(self):
         ftp_server = self.env.company.onebeat_ftp_server_id
-        file_names = [f.split("/")[-1] for f in ftp_server.list(".")]
+        file_names = [f.split("/")[-1] for f in ftp_server.list()]
         file_names = [f for f in file_names if re.match(FILE_NAME_REGEX, f)]
         if not file_names:
             raise UserError("No se encontró el archivo para reponer")
         file_name = max(file_names)
-        return os.path.join(".", file_name)
+        return file_name
 
     def _get_last_update_content(self):
         ftp_server = self.env.company.onebeat_ftp_server_id
@@ -45,11 +47,17 @@ class OnebeatReplenisher(models.TransientModel):
         self._delete_last_update_file()
 
     def _get_supplier_info_by_sku(self, products):
-        return {
-            product.default_code: product.seller_ids[0]
-            for product in products
-            if product.seller_ids and product.purchase_ok
-        }
+        company = self.env.company
+        res = {}
+        for product in products:
+            sellers = product.seller_ids.filtered(lambda s: s.company_id == company)
+            if not sellers:
+                _logger.warning(
+                    f"Product {product.default_code} has no seller for company {company.name}"
+                )
+                continue
+            res[product.default_code] = sellers[0]
+        return res
 
     def _get_purchase_lines_by_supplier(self, rows):
         skus = tuple(row["sku"] for row in rows)
@@ -77,6 +85,7 @@ class OnebeatReplenisher(models.TransientModel):
             purchase_lines_by_supplier[partner].append(
                 self._gen_purchase_line_from_supplier_info_and_row(supplier_info, row)
             )
+        _logger.info(purchase_lines_by_supplier)
         return purchase_lines_by_supplier
 
     def _replenish_rows(self, rows: Iterable[Dict[str, str]]) -> None:
