@@ -63,10 +63,14 @@ class OnebeatReplenisher(models.TransientModel):
         skus = tuple(row["sku"] for row in rows)
         products = self.env["product.product"].search([("default_code", "in", skus)])
         supplier_info_by_sku = self._get_supplier_info_by_sku(products)
-        return self._gen_purchase_lines_from_supplier_info_by_sku(supplier_info_by_sku, rows)
+        return self._gen_purchase_lines_from_supplier_info_by_sku(
+            supplier_info_by_sku, rows
+        )
 
     def _gen_purchase_line_from_supplier_info_and_row(self, supplier_info, row):
-        product = supplier_info.product_id or supplier_info.product_tmpl_id.product_variant_id
+        product = (
+            supplier_info.product_id or supplier_info.product_tmpl_id.product_variant_id
+        )
         uom = product.uom_po_id or product.uom_id
         return {
             "product_id": product.id,
@@ -94,14 +98,16 @@ class OnebeatReplenisher(models.TransientModel):
 
     def _create_purchase_orders(self, purchase_lines_by_supplier):
         for supplier, lines in purchase_lines_by_supplier.items():
-            self.env["purchase.order"].create(
-                {
-                    "partner_id": supplier.id,
-                    "order_line": [(0, 0, line) for line in lines],
-                    "origin": "Fillrate100",
-                    "date_planned": None,
-                }
-            )
+            purchase_order_dict = {
+                "partner_id": supplier.id,
+                "order_line": [(0, 0, line) for line in lines],
+                "origin": "Fillrate100",
+                "date_planned": None,
+            }
+            currency = supplier.property_purchase_currency_id
+            if currency:
+                purchase_order_dict["currency_id"] = currency.id
+            self.env["purchase.order"].create(purchase_order_dict)
 
     def _replenish(self, data: str) -> None:
         reader = csv.DictReader(data.splitlines(), delimiter=FILLRATE_CSV_DELIMITER)
