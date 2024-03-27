@@ -401,14 +401,16 @@ class OneBeatWizard(models.TransientModel):
                 ("location_id.usage", "in", ("supplier", "transit")),
                 ("location_dest_id.usage", "=", "internal"),
             ],
-            fields=["product_id", "location_dest_id", "reserved_uom_qty", "qty_done"],
+            fields=[
+                "product_id",
+                "location_dest_id",
+                "quantity",
+            ],
             groupby=["product_id", "location_dest_id"],
             lazy=False,
         )
         on_transit_map = {
-            (line["product_id"][0], line["location_dest_id"][0]): abs(
-                line["reserved_uom_qty"] - line["qty_done"]
-            )
+            (line["product_id"][0], line["location_dest_id"][0]): abs(line["quantity"])
             for line in on_transit_lines
         }
         all_location_ids = {t[1] for t in (on_transit_map.keys() | on_hand_map.keys())}

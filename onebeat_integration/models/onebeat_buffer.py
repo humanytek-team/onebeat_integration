@@ -57,7 +57,11 @@ class OnebeatBuffer(models.Model):
         all_set = {(product.id, location.id) for product in products for location in locations}
         to_create = all_set - current_set
         replenishment_times = {
-            product.id: product.seller_ids[0].delay if product.seller_ids else product.produce_delay
+            product.id: product.seller_ids[0].delay
+            if product.seller_ids
+            else product.bom_ids[0].produce_delay
+            if product.bom_ids
+            else 0
             for product in products
         }
         news = self.create(
