@@ -385,12 +385,12 @@ class OneBeatWizard(models.TransientModel):
                 ("location_id.onebeat_ignore", "=", False),
                 ("location_id.usage", "=", "internal"),
             ],
-            fields=["product_id", "location_id", "quantity"],
+            fields=["product_id", "location_id", "inventory_quantity_auto_apply"],
             groupby=["product_id", "location_id"],
             lazy=False,
         )
         on_hand_map = {
-            (line["product_id"][0], line["location_id"][0]): line["quantity"]
+            (line["product_id"][0], line["location_id"][0]): line["inventory_quantity_auto_apply"]
             for line in on_hand_lines
         }
         on_transit_lines = self.env["stock.move.line"].read_group(
