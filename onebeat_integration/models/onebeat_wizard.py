@@ -17,7 +17,9 @@ FILLRATE_CSV_DELIMITER = ";"
 
 def data_to_bytes(fieldnames, data):
     writer_file = StringIO()
-    writer = csv.DictWriter(writer_file, fieldnames=fieldnames, delimiter=FILLRATE_CSV_DELIMITER)
+    writer = csv.DictWriter(
+        writer_file, fieldnames=fieldnames, delimiter=FILLRATE_CSV_DELIMITER
+    )
     writer.writeheader()
     writer.writerows(data)
     return writer_file.getvalue().encode("utf-8")
@@ -50,7 +52,9 @@ class OneBeatWizard(models.TransientModel):
     _description = "OneBeat Wizard"
 
     def default_production_location_id(self):
-        return self.env["stock.location"].search([("usage", "=", "production")], limit=1)
+        return self.env["stock.location"].search(
+            [("usage", "=", "production")], limit=1
+        )
 
     stocklocations_file = fields.Binary(
         readonly=True,
@@ -187,8 +191,12 @@ class OneBeatWizard(models.TransientModel):
         buffers = Buffers.generate_all_combinations(Products, locations)
         data = [
             {
-                "Stock Location Name": clean(self._get_location_name(buffer.location_id)),
-                "Origin SL": clean(self.get_product_origin_location(buffer.product_id).name),
+                "Stock Location Name": clean(
+                    self._get_location_name(buffer.location_id)
+                ),
+                "Origin SL": clean(
+                    self.get_product_origin_location(buffer.product_id).name
+                ),
                 "SKU Name": clean(buffer.product_id.default_code),
                 "SKU Description": clean(buffer.product_id.display_name),
                 "Buffer Size": buffer.buffer_size,
@@ -229,8 +237,9 @@ class OneBeatWizard(models.TransientModel):
             "Reported Month",
             "Reported Day",
         ]
-        return f'MTSSKUS_{self.get_company_id()}_{now.strftime("%Y%m%d")}.csv', data_to_bytes(
-            fieldnames, data
+        return (
+            f'MTSSKUS_{self.get_company_id()}_{now.strftime("%Y%m%d")}.csv',
+            data_to_bytes(fieldnames, data),
         )
 
     @keep_wizard_open
@@ -342,8 +351,9 @@ class OneBeatWizard(models.TransientModel):
             "Shipping Month",
             "Shipping Day",
         ]
-        return f'TRANSACTIONS_{self.get_company_id()}_{now.strftime("%Y%m%d")}.csv', data_to_bytes(
-            fieldnames, data
+        return (
+            f'TRANSACTIONS_{self.get_company_id()}_{now.strftime("%Y%m%d")}.csv',
+            data_to_bytes(fieldnames, data),
         )
 
     @keep_wizard_open
@@ -433,10 +443,14 @@ class OneBeatWizard(models.TransientModel):
                 "Stock Location Name": clean(self._get_location_name(location)),
                 "SKU Name": clean(product.default_code),
                 "SKU Description": clean(product.name),
-                "Inventory At Hand": on_hand_map_sum.get((product.id, location.id), 0) or 0
+                "Inventory At Hand": on_hand_map_sum.get((product.id, location.id), 0)
+                or 0
                 if not location.use_virtual_available
                 else product.with_context(location=location.id).virtual_available,
-                "Inventory On The Way": on_transit_map_sum.get((product.id, location.id), 0) or 0,
+                "Inventory On The Way": on_transit_map_sum.get(
+                    (product.id, location.id), 0
+                )
+                or 0,
                 "Reported Year": year,
                 "Reported Month": month,
                 "Reported Day": day,
@@ -455,8 +469,9 @@ class OneBeatWizard(models.TransientModel):
             "Reported Month",
             "Reported Day",
         ]
-        return f'STATUS_{self.get_company_id()}_{now.strftime("%Y%m%d")}.csv', data_to_bytes(
-            fieldnames, data
+        return (
+            f'STATUS_{self.get_company_id()}_{now.strftime("%Y%m%d")}.csv',
+            data_to_bytes(fieldnames, data),
         )
 
     @keep_wizard_open
