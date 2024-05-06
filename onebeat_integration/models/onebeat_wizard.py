@@ -425,7 +425,8 @@ class OneBeatWizard(models.TransientModel):
         }
         all_location_ids = {t[1] for t in (on_transit_map.keys() | on_hand_map.keys())}
         all_locations = self.env["stock.location"].browse(list(all_location_ids))
-        child_to_parent = self._children_to_parents(all_locations)
+        Locations = self.env["stock.location"].search([("onebeat_ignore", "=", False)])
+        child_to_parent = self._children_to_parents(Locations)
 
         # Summarize by parent location
         on_hand_map_sum = defaultdict(float)
