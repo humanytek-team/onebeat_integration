@@ -456,6 +456,7 @@ class OneBeatWizard(models.TransientModel):
                 "Reported Day": day,
             }
             for location in all_locations
+            if location.is_direct_from_warehouse
             for product in Products
         ]
 
