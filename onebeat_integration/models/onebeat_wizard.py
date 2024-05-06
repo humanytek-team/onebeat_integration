@@ -423,8 +423,6 @@ class OneBeatWizard(models.TransientModel):
             (line["product_id"][0], line["location_dest_id"][0]): abs(line["quantity"])
             for line in on_transit_lines
         }
-        all_location_ids = {t[1] for t in (on_transit_map.keys() | on_hand_map.keys())}
-        all_locations = self.env["stock.location"].browse(list(all_location_ids))
         Locations = self.env["stock.location"].search([("onebeat_ignore", "=", False)])
         child_to_parent = self._children_to_parents(Locations)
 
@@ -456,7 +454,7 @@ class OneBeatWizard(models.TransientModel):
                 "Reported Month": month,
                 "Reported Day": day,
             }
-            for location in all_locations
+            for location in Locations
             if location.is_direct_from_warehouse
             for product in Products
         ]
