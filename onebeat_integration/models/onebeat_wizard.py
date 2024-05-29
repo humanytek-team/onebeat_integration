@@ -408,7 +408,7 @@ class OneBeatWizard(models.TransientModel):
                 ("state", "in", ("confirmed", "partially_available", "assigned")),
                 ("location_id.onebeat_ignore", "=", False),
                 ("location_dest_id.onebeat_ignore", "=", False),
-                ("location_id.usage", "in", ("supplier", "transit")),
+                ("location_id.usage", "in", ("supplier", "transit", "production")),
                 ("location_dest_id.usage", "=", "internal"),
             ],
             fields=[
