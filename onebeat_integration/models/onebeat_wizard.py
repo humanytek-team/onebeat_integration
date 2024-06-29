@@ -261,7 +261,7 @@ class OneBeatWizard(models.TransientModel):
                 "OUT" if move.location_id.usage == "internal" else "IN",
                 date,
             )
-            grouped[key] = grouped.get(key, 0) or 0 + move.quantity_done
+            grouped[key] = grouped.get(key, 0) or 0 + move.quantity
         return grouped
 
     def get_transactions_file(self, start=None, stop=None):
